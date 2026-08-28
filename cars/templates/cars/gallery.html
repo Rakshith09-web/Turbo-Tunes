@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Car Gallery — AutoCraft 3D{% endblock %}
+{% block content %}
+  <h1>Choose a car</h1>
+  <div class="car-grid">
+    {% for car in cars %}
+      <div class="car-card">
+        {% if car.thumbnail %}
+          <img src="{{ car.thumbnail.url }}" alt="{{ car }}" />
+        {% endif %}
+        <h2>{{ car }}</h2>
+        <p>{{ car.description }}</p>
+      </div>
+    {% empty %}
+      <p>No cars yet — add one in the admin panel.</p>
+    {% endfor %}
+  </div>
+{% endblock %}

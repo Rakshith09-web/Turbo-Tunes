@@ -5,3 +5,6 @@ body { font-family: system-ui, sans-serif; background: #0f0f12; color: #eee; }
 .nav-links a { color: #ccc; text-decoration: none; margin-left: 1.5rem; }
 .nav-links a:hover { color: #fff; }
 main { padding: 2rem; }
+.car-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
+.car-card { background: #1a1a1f; border-radius: 8px; padding: 1rem; }
+.car-card img { width: 100%; border-radius: 4px; }

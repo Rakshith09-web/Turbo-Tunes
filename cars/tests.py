@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.urls import reverse
 from cars.models import Car, CustomizationOption
 
 
@@ -19,3 +20,15 @@ class CarModelTests(TestCase):
         self.assertEqual(option.car, car)
         self.assertIn(option, car.options.all())
         self.assertEqual(option.option_type, "paint")
+
+
+class CarGalleryViewTests(TestCase):
+    def test_gallery_lists_all_cars(self):
+        Car.objects.create(name="Model S", brand="Volt Motors")
+        Car.objects.create(name="Ranger", brand="Trailblaze")
+
+        response = self.client.get(reverse("car_gallery"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Model S")
+        self.assertContains(response, "Ranger")
