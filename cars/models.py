@@ -5,8 +5,13 @@ class Car(models.Model):
     name = models.CharField(max_length=100)
     brand = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-    thumbnail = models.ImageField(upload_to="cars/thumbnails/")
-    model_file = models.FileField(upload_to="cars/models/")
+    thumbnail = models.ImageField(upload_to="cars/thumbnails/", blank=True, null=True)
+    model_file = models.FileField(
+        upload_to="cars/models/",
+        blank=True,
+        null=True,
+        help_text="A .glb file. Leave blank to use the built-in procedural placeholder car.",
+    )
 
     def __str__(self):
         return f"{self.brand} {self.name}"
