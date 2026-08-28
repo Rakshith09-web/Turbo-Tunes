@@ -1,0 +1,12 @@
+.customizer-layout { display: flex; gap: 1.5rem; margin-top: 1rem; }
+#viewer { flex: 1; height: 480px; background: #050506; border-radius: 8px; position: relative; }
+#options-panel { width: 260px; }
+.option-group { margin-bottom: 1.25rem; }
+.option-group h3 { text-transform: capitalize; margin-bottom: 0.5rem; }
+.swatch-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.swatch { width: 32px; height: 32px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+.swatch.selected { border-color: #fff; }
+.option-button { display: block; width: 100%; text-align: left; padding: 0.5rem; margin-bottom: 0.25rem; background: #1a1a1f; color: #eee; border: 1px solid #333; border-radius: 4px; cursor: pointer; }
+.option-button.selected { border-color: #4da3ff; }
+.view-presets { display: flex; gap: 0.5rem; position: absolute; bottom: 0.75rem; left: 0.75rem; }
+.view-presets button { background: #1a1a1f; color: #eee; border: 1px solid #333; border-radius: 4px; padding: 0.35rem 0.6rem; cursor: pointer; }

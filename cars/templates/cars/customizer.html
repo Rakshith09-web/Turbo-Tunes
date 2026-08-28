@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ car }} — Customizer{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'cars/css/customizer.css' %}" />
+{% endblock %}
+{% block content %}
+  <h1>{{ car }}</h1>
+  {{ car_data|json_script:"car-data" }}
+  <div class="customizer-layout">
+    <div id="viewer"></div>
+    <aside id="options-panel"></aside>
+  </div>
+{% endblock %}

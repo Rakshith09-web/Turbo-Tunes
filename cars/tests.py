@@ -32,3 +32,25 @@ class CarGalleryViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Model S")
         self.assertContains(response, "Ranger")
+
+
+class CarCustomizerViewTests(TestCase):
+    def test_customizer_page_embeds_car_and_options_json(self):
+        car = Car.objects.create(name="Model S", brand="Volt Motors")
+        CustomizationOption.objects.create(
+            car=car,
+            option_type=CustomizationOption.OptionType.PAINT,
+            label="Racing Red",
+            mesh_name="Body",
+            color_hex="#CC0000",
+        )
+
+        response = self.client.get(reverse("car_customizer", args=[car.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Racing Red")
+        self.assertContains(response, "car-data")
+
+    def test_customizer_404s_for_unknown_car(self):
+        response = self.client.get(reverse("car_customizer", args=[9999]))
+        self.assertEqual(response.status_code, 404)
