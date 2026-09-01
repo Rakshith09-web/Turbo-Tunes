@@ -1,12 +1,146 @@
-.customizer-layout { display: flex; gap: 1.5rem; margin-top: 1rem; }
-#viewer { flex: 1; height: 480px; background: #050506; border-radius: 8px; position: relative; }
-#options-panel { width: 260px; }
-.option-group { margin-bottom: 1.25rem; }
-.option-group h3 { text-transform: capitalize; margin-bottom: 0.5rem; }
-.swatch-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.swatch { width: 32px; height: 32px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
-.swatch.selected { border-color: #fff; }
-.option-button { display: block; width: 100%; text-align: left; padding: 0.5rem; margin-bottom: 0.25rem; background: #1a1a1f; color: #eee; border: 1px solid #333; border-radius: 4px; cursor: pointer; }
-.option-button.selected { border-color: #4da3ff; }
-.view-presets { display: flex; gap: 0.5rem; position: absolute; bottom: 0.75rem; left: 0.75rem; }
-.view-presets button { background: #1a1a1f; color: #eee; border: 1px solid #333; border-radius: 4px; padding: 0.35rem 0.6rem; cursor: pointer; }
+.customizer-hero {
+  text-align: center;
+  padding: 32px 0 8px;
+}
+.car-eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.car-title {
+  font-weight: 500;
+  font-size: 40px;
+  letter-spacing: -0.01em;
+  margin-top: 6px;
+}
+
+.viewer-stage {
+  position: relative;
+  height: min(70vh, 600px);
+  min-height: 420px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 78%, rgba(32, 31, 28, 0.06) 0%, rgba(32, 31, 28, 0) 60%), var(--bg);
+}
+
+#viewer {
+  position: absolute;
+  inset: 0;
+}
+
+.viewer-hint {
+  position: absolute;
+  top: 16px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+
+.view-presets {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 6px;
+}
+.view-presets button {
+  background: var(--card-bg);
+  color: var(--muted-strong);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.view-presets button:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+#options-panel {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.toolbar-swatches {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 10px 20px;
+  box-shadow: 0 12px 32px rgba(32, 31, 28, 0.08);
+}
+.swatch-row-label {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  margin-right: 2px;
+}
+.swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+.swatch.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--card-bg), 0 0 0 3px var(--accent);
+}
+.option-pill {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: var(--muted-strong);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.option-pill.selected {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.toolbar-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 10px;
+  box-shadow: 0 14px 36px rgba(32, 31, 28, 0.08);
+}
+.toolbtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: none;
+  background: none;
+  color: var(--muted-strong);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.toolbtn svg { flex-shrink: 0; }
+.toolbtn.active {
+  background: var(--accent);
+  color: #FFFFFF;
+}

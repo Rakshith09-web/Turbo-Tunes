@@ -14,7 +14,7 @@ carData.options.forEach((option) => {
 const selectedOptionIds = new Set();
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x050506);
+scene.background = new THREE.Color(0xfbfaf8);
 
 const camera = new THREE.PerspectiveCamera(
   45,
@@ -133,7 +133,7 @@ function createPlaceholderCar() {
 
   const body = new THREE.Mesh(
     new THREE.BoxGeometry(2, 0.8, 4.2),
-    new THREE.MeshStandardMaterial({ color: 0xdddddd })
+    new THREE.MeshStandardMaterial({ color: 0xb9b4a8 })
   );
   body.name = "Body";
   body.position.set(0, 0.8, 0);
@@ -189,29 +189,50 @@ function createPlaceholderCar() {
   return car;
 }
 
+function meshesMatchingPrefix(prefix) {
+  const matches = [];
+  carRoot.traverse((child) => {
+    if (child.isMesh && child.name.startsWith(prefix)) matches.push(child);
+  });
+  return matches;
+}
+
 function applyOption(option) {
   if (!carRoot) return;
-  const target = carRoot.getObjectByName(option.mesh_name);
-  if (!target) {
-    console.warn(`Mesh "${option.mesh_name}" not found in this car's model.`);
-    return;
-  }
 
-  if (option.option_type === "paint" || option.option_type === "interior") {
-    target.material = target.material.clone();
-    target.material.color.set(option.color_hex);
-  } else if (option.option_type === "decal") {
-    new THREE.TextureLoader().load(option.texture_url, (texture) => {
-      texture.colorSpace = THREE.SRGBColorSpace;
+  if (option.option_type === "paint" || option.option_type === "interior" || option.option_type === "decal") {
+    const target = carRoot.getObjectByName(option.mesh_name);
+    if (!target) {
+      console.warn(`Mesh "${option.mesh_name}" not found in this car's model.`);
+      return;
+    }
+    if (option.option_type === "decal") {
+      new THREE.TextureLoader().load(option.texture_url, (texture) => {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        target.material = target.material.clone();
+        target.material.map = texture;
+        target.material.needsUpdate = true;
+      });
+    } else {
       target.material = target.material.clone();
-      target.material.map = texture;
-      target.material.needsUpdate = true;
-    });
+      target.material.color.set(option.color_hex);
+    }
   } else if (option.option_type === "wheels" || option.option_type === "exhaust") {
+    // A "style" for these types is a group of parts sharing a name prefix
+    // (e.g. mesh_name "Wheel_Offroad" covers Wheel_Offroad_FL/FR/RL/RR).
+    let matchedAny = false;
     optionsByType[option.option_type].forEach((sibling) => {
-      const siblingMesh = carRoot.getObjectByName(sibling.mesh_name);
-      if (siblingMesh) siblingMesh.visible = sibling.id === option.id;
+      const isSelected = sibling.id === option.id;
+      const meshes = meshesMatchingPrefix(sibling.mesh_name);
+      if (meshes.length > 0) matchedAny = matchedAny || sibling.id === option.id;
+      meshes.forEach((mesh) => {
+        mesh.visible = isSelected;
+      });
     });
+    if (!matchedAny) {
+      console.warn(`No meshes matching "${option.mesh_name}" found in this car's model.`);
+      return;
+    }
   }
 
   selectedOptionIds.add(option.id);
@@ -229,39 +250,95 @@ function refreshPanelSelection() {
   });
 }
 
+const CATEGORY_LABELS = {
+  paint: "Paint",
+  wheels: "Wheels",
+  interior: "Interior",
+  exhaust: "Exhaust",
+  decal: "Decals",
+};
+
+// Stroke-based, 17px, one consistent style — matches the icon set used in the draft mockup.
+const CATEGORY_ICONS = {
+  paint:
+    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>',
+  wheels:
+    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5 L12 8.5 M12 15.5 L12 20.5 M3.5 12 L8.5 12 M15.5 12 L20.5 12 M6 6 L9.5 9.5 M14.5 14.5 L18 18 M18 6 L14.5 9.5 M9.5 14.5 L6 18"/></svg>',
+  interior:
+    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19 L5 12 C5 8 8 5.5 12 5.5 C16 5.5 19 8 19 12 L19 19"/><path d="M5 19 L19 19"/><path d="M7 19 L7 15.5 C7 13.8 8.5 12.5 10 12.5 L14 12.5 C15.5 12.5 17 13.8 17 15.5 L17 19"/></svg>',
+  exhaust:
+    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10 L14 10 C16.5 10 18 12 18 14 L18 15"/><circle cx="19.5" cy="15" r="2.3"/></svg>',
+  decal:
+    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 4 L9 20 M13 4 L13 20"/></svg>',
+};
+
+let activeCategory = null;
+
 function buildOptionsPanel() {
   const panel = document.getElementById("options-panel");
   panel.innerHTML = "";
 
-  Object.entries(optionsByType).forEach(([type, options]) => {
-    const group = document.createElement("div");
-    group.className = "option-group";
+  const types = Object.keys(optionsByType);
+  if (types.length === 0) return;
+  activeCategory = types.includes(activeCategory) ? activeCategory : types[0];
 
-    const heading = document.createElement("h3");
-    heading.textContent = type;
-    group.appendChild(heading);
+  const swatchRow = document.createElement("div");
+  swatchRow.className = "toolbar-swatches";
+  panel.appendChild(swatchRow);
 
-    const isColorType = type === "paint" || type === "interior";
-    const row = document.createElement("div");
-    row.className = isColorType ? "swatch-row" : "";
-
-    options.forEach((option) => {
-      const el = document.createElement(isColorType ? "div" : "button");
-      el.dataset.optionId = option.id;
-      el.title = option.label;
-      if (isColorType) {
-        el.className = "swatch";
-        el.style.backgroundColor = option.color_hex;
-      } else {
-        el.className = "option-button";
-        el.textContent = option.label;
-      }
-      el.addEventListener("click", () => applyOption(option));
-      row.appendChild(el);
+  const iconBar = document.createElement("div");
+  iconBar.className = "toolbar-icons";
+  types.forEach((type) => {
+    const tab = document.createElement("button");
+    tab.className = "toolbtn";
+    tab.dataset.category = type;
+    tab.innerHTML = `${CATEGORY_ICONS[type] || ""}<span>${CATEGORY_LABELS[type] || type}</span>`;
+    tab.addEventListener("click", () => {
+      activeCategory = type;
+      renderSwatchRow();
+      refreshTabSelection();
     });
+    iconBar.appendChild(tab);
+  });
+  panel.appendChild(iconBar);
 
-    group.appendChild(row);
-    panel.appendChild(group);
+  renderSwatchRow();
+  refreshTabSelection();
+}
+
+function refreshTabSelection() {
+  document.querySelectorAll(".toolbtn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.category === activeCategory);
+  });
+}
+
+function renderSwatchRow() {
+  const swatchRow = document.querySelector(".toolbar-swatches");
+  if (!swatchRow) return;
+  swatchRow.innerHTML = "";
+
+  const type = activeCategory;
+  const options = optionsByType[type] || [];
+  const isColorType = type === "paint" || type === "interior";
+
+  const label = document.createElement("span");
+  label.className = "swatch-row-label";
+  label.textContent = CATEGORY_LABELS[type] || type;
+  swatchRow.appendChild(label);
+
+  options.forEach((option) => {
+    const el = document.createElement(isColorType ? "div" : "button");
+    el.dataset.optionId = option.id;
+    el.title = option.label;
+    if (isColorType) {
+      el.className = "swatch";
+      el.style.backgroundColor = option.color_hex;
+    } else {
+      el.className = "option-pill";
+      el.textContent = option.label;
+    }
+    el.addEventListener("click", () => applyOption(option));
+    swatchRow.appendChild(el);
   });
 }
 

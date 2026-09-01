@@ -13,11 +13,15 @@
   </script>
 {% endblock %}
 {% block content %}
-  <h1>{{ car }}</h1>
+  <div class="customizer-hero">
+    <div class="car-eyebrow">{{ car.brand }}</div>
+    <h1 class="car-title">{{ car.name }}</h1>
+  </div>
   {{ car_data|json_script:"car-data" }}
-  <div class="customizer-layout">
+  <div class="viewer-stage">
     <div id="viewer"></div>
-    <aside id="options-panel"></aside>
+    <div class="viewer-hint">Drag to rotate — move your cursor to look around</div>
+    <div id="options-panel"></div>
   </div>
   <script type="module" src="{% static 'cars/js/viewer.js' %}"></script>
 {% endblock %}

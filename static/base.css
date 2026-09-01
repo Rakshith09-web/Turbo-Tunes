@@ -1,10 +1,66 @@
+:root {
+  --bg: #FBFAF8;
+  --fg: #201F1C;
+  --muted: #8A867B;
+  --muted-strong: #55524A;
+  --accent: #C6641E;
+  --border: #EAE7DF;
+  --card-bg: #FFFFFF;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: system-ui, sans-serif; background: #0f0f12; color: #eee; }
-.site-nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: #1a1a1f; }
-.site-nav .brand { font-weight: bold; font-size: 1.25rem; color: #fff; text-decoration: none; }
-.nav-links a { color: #ccc; text-decoration: none; margin-left: 1.5rem; }
-.nav-links a:hover { color: #fff; }
-main { padding: 2rem; }
-.car-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
-.car-card { background: #1a1a1f; border-radius: 8px; padding: 1rem; }
-.car-card img { width: 100%; border-radius: 4px; }
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+h1, h2, .brand {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+a { color: inherit; }
+
+.site-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28px 48px;
+}
+.site-nav .brand {
+  font-weight: 600;
+  font-size: 19px;
+  letter-spacing: 0.06em;
+  color: var(--fg);
+  text-decoration: none;
+}
+.nav-links a {
+  color: var(--muted-strong);
+  text-decoration: none;
+  margin-left: 32px;
+  font-size: 14px;
+  transition: color 0.15s ease;
+}
+.nav-links a:hover { color: var(--accent); }
+
+main { padding: 8px 48px 48px; }
+
+.car-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+.car-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(32, 31, 28, 0.05);
+}
+.car-card img { width: 100%; border-radius: 8px; display: block; }
+.car-card h2 { font-size: 18px; font-weight: 500; margin-top: 12px; }
+.car-card h2 a { text-decoration: none; }
+.car-card h2 a:hover { color: var(--accent); }
+.car-card p { color: var(--muted-strong); margin-top: 6px; font-size: 14px; }
