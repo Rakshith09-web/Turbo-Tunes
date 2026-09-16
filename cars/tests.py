@@ -54,3 +54,21 @@ class CarCustomizerViewTests(TestCase):
     def test_customizer_404s_for_unknown_car(self):
         response = self.client.get(reverse("car_customizer", args=[9999]))
         self.assertEqual(response.status_code, 404)
+
+
+class HomeViewTests(TestCase):
+    def test_home_shows_the_first_cars_customizer(self):
+        Car.objects.create(name="Model S", brand="Volt Motors")
+        Car.objects.create(name="Ranger", brand="Trailblaze")
+
+        response = self.client.get(reverse("home"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Model S")
+        self.assertContains(response, "car-data")
+
+    def test_home_falls_back_to_empty_gallery_when_no_cars_exist(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No cars yet")

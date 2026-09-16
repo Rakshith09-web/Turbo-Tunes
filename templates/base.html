@@ -12,7 +12,7 @@
 </head>
 <body>
   <nav class="site-nav">
-    <a href="{% url 'car_gallery' %}" class="brand">AUTOCRAFT</a>
+    <a href="{% url 'home' %}" class="brand">AUTOCRAFT</a>
     <div class="nav-links">
       {% if user.is_authenticated %}
         <a href="{% url 'my_garage' %}">My Garage</a>

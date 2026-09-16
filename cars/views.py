@@ -2,6 +2,13 @@ from django.shortcuts import get_object_or_404, render
 from cars.models import Car
 
 
+def home(request):
+    car = Car.objects.first()
+    if car is None:
+        return car_gallery(request)
+    return car_customizer(request, car.id)
+
+
 def car_gallery(request):
     cars = Car.objects.all()
     return render(request, "cars/gallery.html", {"cars": cars})
