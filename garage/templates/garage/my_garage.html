@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}My Garage — AutoCraft 3D{% endblock %}
+{% block content %}
+  <h1>My Garage</h1>
+  <div class="car-grid">
+    {% for build in builds %}
+      <div class="car-card">
+        <h2><a href="{% url 'car_customizer' build.car.id %}?build={{ build.id }}">{{ build.car }}</a></h2>
+        <p>Saved {{ build.created_at|date:"d M Y, H:i" }}</p>
+      </div>
+    {% empty %}
+      <p>No saved builds yet — customize a car and save it to see it here.</p>
+    {% endfor %}
+  </div>
+{% endblock %}
