@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404, render
 from cars.models import Car
+from garage.models import SavedBuild
 
 
 def home(request):
@@ -32,5 +33,16 @@ def car_customizer(request, pk):
     car_data = {
         "modelUrl": car.model_file.url if car.model_file else None,
         "options": options,
+        "carId": car.id,
+        "isAuthenticated": request.user.is_authenticated,
     }
-    return render(request, "cars/customizer.html", {"car": car, "car_data": car_data})
+
+    context = {"car": car, "car_data": car_data}
+
+    build_id = request.GET.get("build")
+    if build_id and request.user.is_authenticated:
+        build = SavedBuild.objects.filter(pk=build_id, user=request.user, car=car).first()
+        if build:
+            context["selected_option_ids"] = build.get_option_id_list()
+
+    return render(request, "cars/customizer.html", context)

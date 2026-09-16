@@ -144,3 +144,42 @@
   background: var(--accent);
   color: #FFFFFF;
 }
+
+.save-build-bar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.save-build-btn {
+  background: var(--accent);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(198, 100, 30, 0.25);
+  transition: opacity 0.15s ease;
+}
+.save-build-btn:hover { opacity: 0.9; }
+
+.toast-message {
+  background: var(--fg);
+  color: #FFFFFF;
+  font-size: 12px;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  max-width: 240px;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.toast-message.visible {
+  opacity: 1;
+  transform: translateY(0);
+}

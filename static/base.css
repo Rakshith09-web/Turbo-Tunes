@@ -1,10 +1,10 @@
 :root {
-  --bg: #FBFAF8;
+  --bg: #F5F0E6;
   --fg: #201F1C;
   --muted: #8A867B;
   --muted-strong: #55524A;
   --accent: #C6641E;
-  --border: #EAE7DF;
+  --border: #E4DCC9;
   --card-bg: #FFFFFF;
 }
 
@@ -35,6 +35,10 @@ a { color: inherit; }
   color: var(--fg);
   text-decoration: none;
 }
+.nav-links {
+  display: flex;
+  align-items: center;
+}
 .nav-links a {
   color: var(--muted-strong);
   text-decoration: none;
@@ -43,6 +47,18 @@ a { color: inherit; }
   transition: color 0.15s ease;
 }
 .nav-links a:hover { color: var(--accent); }
+
+.logout-form { margin-left: 32px; }
+.logout-form button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--muted-strong);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.logout-form button:hover { color: var(--accent); }
 
 main { padding: 8px 48px 48px; }
 

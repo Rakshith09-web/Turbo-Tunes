@@ -1,6 +1,9 @@
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
+
 from cars.models import Car, CustomizationOption
+from garage.models import SavedBuild
 
 
 class CarModelTests(TestCase):
@@ -54,6 +57,49 @@ class CarCustomizerViewTests(TestCase):
     def test_customizer_404s_for_unknown_car(self):
         response = self.client.get(reverse("car_customizer", args=[9999]))
         self.assertEqual(response.status_code, 404)
+
+    def test_customizer_reports_anonymous_users_as_unauthenticated(self):
+        car = Car.objects.create(name="Model S", brand="Volt Motors")
+
+        response = self.client.get(reverse("car_customizer", args=[car.pk]))
+
+        self.assertContains(response, '"isAuthenticated": false')
+
+    def test_customizer_reports_logged_in_users_as_authenticated(self):
+        User.objects.create_user(username="jane", password="pw")
+        car = Car.objects.create(name="Model S", brand="Volt Motors")
+        self.client.login(username="jane", password="pw")
+
+        response = self.client.get(reverse("car_customizer", args=[car.pk]))
+
+        self.assertContains(response, '"isAuthenticated": true')
+
+    def test_customizer_embeds_selected_options_for_owned_build(self):
+        user = User.objects.create_user(username="jane", password="pw")
+        car = Car.objects.create(name="Model S", brand="Volt Motors")
+        option = CustomizationOption.objects.create(
+            car=car, option_type="paint", label="Red", mesh_name="Body", color_hex="#F00"
+        )
+        build = SavedBuild.objects.create(user=user, car=car, option_ids=str(option.id))
+        self.client.login(username="jane", password="pw")
+
+        response = self.client.get(reverse("car_customizer", args=[car.pk]) + f"?build={build.id}")
+
+        self.assertContains(response, "selected-options")
+
+    def test_customizer_ignores_build_owned_by_another_user(self):
+        owner = User.objects.create_user(username="jane", password="pw")
+        other = User.objects.create_user(username="bob", password="pw")
+        car = Car.objects.create(name="Model S", brand="Volt Motors")
+        option = CustomizationOption.objects.create(
+            car=car, option_type="paint", label="Red", mesh_name="Body", color_hex="#F00"
+        )
+        build = SavedBuild.objects.create(user=owner, car=car, option_ids=str(option.id))
+        self.client.login(username="bob", password="pw")
+
+        response = self.client.get(reverse("car_customizer", args=[car.pk]) + f"?build={build.id}")
+
+        self.assertNotContains(response, "selected-options")
 
 
 class HomeViewTests(TestCase):

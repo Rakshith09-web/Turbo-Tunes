@@ -13,8 +13,11 @@ carData.options.forEach((option) => {
 
 const selectedOptionIds = new Set();
 
+const savedSelectionEl = document.getElementById("selected-options");
+const preselectedOptionIds = savedSelectionEl ? JSON.parse(savedSelectionEl.textContent) : [];
+
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xfbfaf8);
+scene.background = new THREE.Color(0xf5f0e6);
 
 const camera = new THREE.PerspectiveCamera(
   45,
@@ -346,11 +349,77 @@ function getSelectedOptionIds() {
   return Array.from(selectedOptionIds);
 }
 
+function getCookie(name) {
+  const match = document.cookie.match(new RegExp("(?:^| )" + name + "=([^;]+)"));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+let toastEl = null;
+let toastTimeout = null;
+
+function showToast(message) {
+  if (!toastEl) return;
+  toastEl.textContent = message;
+  toastEl.classList.add("visible");
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => toastEl.classList.remove("visible"), 3200);
+}
+
+async function handleSaveClick() {
+  if (!carData.isAuthenticated) {
+    showToast("Login to save and access your work");
+    return;
+  }
+
+  showToast("Saving…");
+  try {
+    const response = await fetch("/garage/save/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
+      body: JSON.stringify({ car_id: carData.carId, option_ids: getSelectedOptionIds() }),
+    });
+    showToast(response.ok ? "Saved to My Garage" : "Couldn't save — please try again.");
+  } catch (error) {
+    showToast("Couldn't save — please try again.");
+    console.error("Save build failed:", error);
+  }
+}
+
+function addSaveControls() {
+  const bar = document.createElement("div");
+  bar.className = "save-build-bar";
+
+  const button = document.createElement("button");
+  button.className = "save-build-btn";
+  button.textContent = "Save my build";
+  button.addEventListener("click", handleSaveClick);
+  bar.appendChild(button);
+
+  const toast = document.createElement("div");
+  toast.className = "toast-message";
+  bar.appendChild(toast);
+  toastEl = toast;
+
+  viewerEl.appendChild(bar);
+}
+
+function applyPreselectedOptions() {
+  preselectedOptionIds.forEach((id) => {
+    const option = carData.options.find((o) => o.id === id);
+    if (option) applyOption(option);
+  });
+}
+
 function onModelReady() {
   scene.add(carRoot);
   frameCameraFromDirection(VIEW_DIRECTIONS.front);
   addViewPresetButtons();
+  addSaveControls();
   buildOptionsPanel();
+  applyPreselectedOptions();
 }
 
 if (carData.modelUrl) {
