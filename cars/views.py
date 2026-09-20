@@ -26,6 +26,7 @@ def car_customizer(request, pk):
             "mesh_name": option.mesh_name,
             "color_hex": option.color_hex,
             "texture_url": option.texture_file.url if option.texture_file else None,
+            "part_url": option.part_file.url if option.part_file else None,
         }
         for option in car.options.all()
     ]
@@ -33,6 +34,8 @@ def car_customizer(request, pk):
     car_data = {
         "modelUrl": car.model_file.url if car.model_file else None,
         "options": options,
+        "paintMode": car.paint_mode,
+        "paintRegion": car.paint_region,
         "carId": car.id,
         "isAuthenticated": request.user.is_authenticated,
     }

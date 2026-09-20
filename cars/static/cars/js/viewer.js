@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { DecalGeometry } from "three/addons/geometries/DecalGeometry.js";
 
 const carData = JSON.parse(document.getElementById("car-data").textContent);
 const viewerEl = document.getElementById("viewer");
@@ -26,10 +27,23 @@ const camera = new THREE.PerspectiveCamera(
   1000
 );
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+// ?capture keeps the last rendered frame readable, for saving car thumbnails.
+const renderer = new THREE.WebGLRenderer({
+  antialias: true,
+  preserveDrawingBuffer: new URLSearchParams(location.search).has("capture"),
+});
 renderer.setSize(viewerEl.clientWidth, viewerEl.clientHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 viewerEl.appendChild(renderer.domElement);
+
+// Lift the car in the frame so the floating toolbar at the bottom doesn't cover it.
+const VIEW_LIFT = 0.1;
+function applyViewOffset() {
+  const width = viewerEl.clientWidth;
+  const height = viewerEl.clientHeight;
+  camera.setViewOffset(width, height, 0, height * VIEW_LIFT, width, height);
+}
+applyViewOffset();
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -85,7 +99,8 @@ viewerEl.addEventListener("pointerleave", () => {
   pointerNDC.y = 0;
 });
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+scene.add(new THREE.HemisphereLight(0xffffff, 0xd9d2c0, 0.75));
 const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
 keyLight.position.set(5, 10, 7);
 scene.add(keyLight);
@@ -98,7 +113,8 @@ function frameCameraFromDirection(direction) {
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
   const maxDim = Math.max(size.x, size.y, size.z);
-  const distance = maxDim * 1.8;
+  const overhead = Math.abs(direction.y) > 0.9; // top/bottom need more room than side views
+  const distance = maxDim * (overhead ? 1.95 : 1.65);
 
   camera.position.copy(center.clone().add(direction.clone().normalize().multiplyScalar(distance)));
   camera.lookAt(center);
@@ -192,51 +208,304 @@ function createPlaceholderCar() {
   return car;
 }
 
+function nameMatches(object, prefix) {
+  return object.name.toLowerCase().startsWith(prefix.toLowerCase());
+}
+
 function meshesMatchingPrefix(prefix) {
   const matches = [];
   carRoot.traverse((child) => {
-    if (child.isMesh && child.name.startsWith(prefix)) matches.push(child);
+    if (child.isMesh && nameMatches(child, prefix)) matches.push(child);
   });
   return matches;
 }
 
-function applyOption(option) {
+function findMeshByName(name) {
+  let found = null;
+  carRoot.traverse((child) => {
+    if (!found && child.isMesh && child.name.toLowerCase() === name.toLowerCase()) found = child;
+  });
+  return found;
+}
+
+// ---- Paint -------------------------------------------------------------------------------
+// "palette" models take all their colours from one shared palette image, so painting the
+// car means recoloring just the body's swatch in a copy of that image.
+let palette = null;
+
+function setupPalette() {
+  const region = (carData.paintRegion || "").split(",").map(Number);
+  if (region.length !== 4 || region.some(Number.isNaN)) return;
+
+  let sourceMap = null;
+  carRoot.traverse((child) => {
+    if (!sourceMap && child.isMesh && child.material && child.material.map) {
+      sourceMap = child.material.map;
+    }
+  });
+  if (!sourceMap) return;
+
+  const image = sourceMap.image;
+  const canvas = document.createElement("canvas");
+  canvas.width = image.width;
+  canvas.height = image.height;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(image, 0, 0);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.flipY = sourceMap.flipY;
+  texture.colorSpace = sourceMap.colorSpace;
+  texture.magFilter = sourceMap.magFilter;
+  texture.minFilter = sourceMap.minFilter;
+
+  const swapped = new Set();
+  carRoot.traverse((child) => {
+    if (child.isMesh && child.material && child.material.map === sourceMap && !swapped.has(child.material)) {
+      swapped.add(child.material);
+      child.material.map = texture;
+      child.material.needsUpdate = true;
+    }
+  });
+
+  palette = { ctx, texture, region };
+}
+
+function shadeHex(hex, factor) {
+  const value = parseInt(hex.replace("#", ""), 16);
+  const channel = (shift) => Math.max(0, Math.min(255, Math.round(((value >> shift) & 255) * factor)));
+  return `rgb(${channel(16)}, ${channel(8)}, ${channel(0)})`;
+}
+
+function paintPalette(hex) {
+  if (!palette) return false;
+  const [x, y, w, h] = palette.region;
+  palette.ctx.fillStyle = hex;
+  palette.ctx.fillRect(x, y, w / 2, h);
+  palette.ctx.fillStyle = shadeHex(hex, 0.86);
+  palette.ctx.fillRect(x + w / 2, y, w / 2, h);
+  palette.texture.needsUpdate = true;
+  return true;
+}
+
+function applyPaint(option) {
+  if (carData.paintMode === "palette") {
+    if (paintPalette(option.color_hex)) return true;
+    console.warn("This car is set to palette paint but its palette couldn't be found.");
+    return false;
+  }
+  const target = findMeshByName(option.mesh_name);
+  if (!target) {
+    console.warn(`Mesh "${option.mesh_name}" not found in this car's model.`);
+    return false;
+  }
+  target.material = target.material.clone();
+  target.material.color.set(option.color_hex);
+  return true;
+}
+
+function applyInterior(option) {
+  const target = findMeshByName(option.mesh_name);
+  if (!target) {
+    console.warn(`Mesh "${option.mesh_name}" not found in this car's model.`);
+    return false;
+  }
+  target.material = target.material.clone();
+  target.material.color.set(option.color_hex);
+  return true;
+}
+
+// ---- Wheels ------------------------------------------------------------------------------
+// Two ways a wheel "style" can work:
+//  - swap: the car has left/right wheel meshes (name ends in -left / -right). A style with a
+//    part file replaces their shape with that file's wheel; one without restores the stock shape.
+//  - show/hide: the car carries every style as separate meshes (name prefix per style).
+const partGeometryCache = new Map();
+
+function loadPartGeometry(url) {
+  if (!partGeometryCache.has(url)) {
+    partGeometryCache.set(
+      url,
+      new Promise((resolve, reject) => {
+        new GLTFLoader().load(
+          url,
+          (gltf) => {
+            let geometry = null;
+            gltf.scene.traverse((child) => {
+              if (!geometry && child.isMesh) geometry = child.geometry;
+            });
+            geometry ? resolve(geometry) : reject(new Error("No mesh in " + url));
+          },
+          undefined,
+          reject
+        );
+      })
+    );
+  }
+  return partGeometryCache.get(url);
+}
+
+function sideWheels(prefix) {
+  return meshesMatchingPrefix(prefix).filter((mesh) => /-(left|right)$/i.test(mesh.name));
+}
+
+// The car's own wheel meshes sit off-centre (outer half only), so the part is nudged outward
+// to line up, and mirrored for the right-hand side.
+const WHEEL_OUTWARD_SHIFT = 0.1;
+
+async function swapWheels(option, wheels) {
+  const partGeometry = option.part_url ? await loadPartGeometry(option.part_url) : null;
+  wheels.forEach((mesh) => {
+    if (!mesh.userData.originalGeometry) mesh.userData.originalGeometry = mesh.geometry;
+    if (mesh.geometry !== mesh.userData.originalGeometry) mesh.geometry.dispose();
+
+    if (!partGeometry) {
+      mesh.geometry = mesh.userData.originalGeometry;
+      return;
+    }
+    const isLeft = /-left$/i.test(mesh.name);
+    const geometry = partGeometry.clone();
+    if (!isLeft) geometry.rotateY(Math.PI);
+    geometry.translate(isLeft ? WHEEL_OUTWARD_SHIFT : -WHEEL_OUTWARD_SHIFT, 0, 0);
+    mesh.geometry = geometry;
+  });
+}
+
+function showOnly(option) {
+  let matchedSelected = false;
+  optionsByType[option.option_type].forEach((sibling) => {
+    const isSelected = sibling.id === option.id;
+    const meshes = meshesMatchingPrefix(sibling.mesh_name);
+    if (isSelected && meshes.length > 0) matchedSelected = true;
+    meshes.forEach((mesh) => {
+      mesh.visible = isSelected;
+    });
+  });
+  if (!matchedSelected) console.warn(`No meshes matching "${option.mesh_name}" found in this car's model.`);
+  return matchedSelected;
+}
+
+async function applyWheels(option) {
+  const wheels = sideWheels(option.mesh_name);
+  if (wheels.length > 0) {
+    await swapWheels(option, wheels);
+    return true;
+  }
+  return showOnly(option);
+}
+
+// ---- Exhaust -----------------------------------------------------------------------------
+// Options named "generated:<style>" are built in code (the free models have no exhaust parts).
+function buildExhaust(style) {
+  const box = new THREE.Box3().setFromObject(carRoot);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const tipRadius = style === "dual" ? size.x * 0.05 : size.x * 0.06;
+  const xOffsets = style === "dual" ? [-size.x * 0.24, size.x * 0.24] : [size.x * 0.24];
+
+  const group = new THREE.Group();
+  group.name = "GeneratedExhaust";
+  const metal = new THREE.MeshStandardMaterial({ color: 0xdfe2e8, metalness: 0.7, roughness: 0.3 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x0c0c0e });
+
+  xOffsets.forEach((dx) => {
+    const tube = new THREE.Mesh(
+      new THREE.CylinderGeometry(tipRadius, tipRadius, size.z * 0.05, 20, 1, true),
+      metal
+    );
+    tube.material.side = THREE.DoubleSide;
+    const hole = new THREE.Mesh(new THREE.CircleGeometry(tipRadius * 0.85, 20), dark);
+    hole.rotation.y = Math.PI;
+    hole.position.z = size.z * 0.02;
+    const tip = new THREE.Group();
+    tip.add(tube, hole);
+    tube.rotation.x = Math.PI / 2;
+    tip.position.set(center.x + dx, box.min.y + size.y * 0.26, box.min.z + size.z * 0.005);
+    group.add(tip);
+  });
+  return group;
+}
+
+function applyExhaust(option) {
+  if (!option.mesh_name.startsWith("generated:")) return showOnly(option);
+
+  const existing = carRoot.getObjectByName("GeneratedExhaust");
+  if (existing) carRoot.remove(existing);
+  const style = option.mesh_name.split(":")[1];
+  if (style !== "none") carRoot.add(buildExhaust(style));
+  return true;
+}
+
+// ---- Decals ------------------------------------------------------------------------------
+// Decals are projected onto the body from above, so they follow its shape whatever its UVs.
+let decalMesh = null;
+
+function clearDecal() {
+  if (decalMesh) {
+    scene.remove(decalMesh);
+    decalMesh.geometry.dispose();
+    decalMesh.material.dispose();
+    decalMesh = null;
+  }
+}
+
+function applyDecal(option) {
+  clearDecal();
+  if (!option.texture_url) return Promise.resolve(true);
+
+  const target = findMeshByName(option.mesh_name);
+  if (!target) {
+    console.warn(`Mesh "${option.mesh_name}" not found in this car's model.`);
+    return Promise.resolve(false);
+  }
+
+  return new Promise((resolve) => {
+    new THREE.TextureLoader().load(
+      option.texture_url,
+      (texture) => {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        carRoot.updateMatrixWorld(true);
+        const box = new THREE.Box3().setFromObject(target);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+
+        // Projector looks straight down: local x = across the car, local y = along it.
+        const depth = size.y * 1.2;
+        const geometry = new DecalGeometry(
+          target,
+          new THREE.Vector3(center.x, box.max.y - depth / 2 + size.y * 0.02, center.z),
+          new THREE.Euler(-Math.PI / 2, 0, 0),
+          new THREE.Vector3(size.x * 0.9, size.z * 1.02, depth)
+        );
+        const material = new THREE.MeshStandardMaterial({
+          map: texture,
+          transparent: true,
+          depthWrite: false,
+          polygonOffset: true,
+          polygonOffsetFactor: -4,
+          roughness: 0.55,
+        });
+        clearDecal();
+        decalMesh = new THREE.Mesh(geometry, material);
+        scene.add(decalMesh);
+        resolve(true);
+      },
+      undefined,
+      () => resolve(false)
+    );
+  });
+}
+
+// ---- Applying an option ------------------------------------------------------------------
+async function applyOption(option) {
   if (!carRoot) return;
 
-  if (option.option_type === "paint" || option.option_type === "interior" || option.option_type === "decal") {
-    const target = carRoot.getObjectByName(option.mesh_name);
-    if (!target) {
-      console.warn(`Mesh "${option.mesh_name}" not found in this car's model.`);
-      return;
-    }
-    if (option.option_type === "decal") {
-      new THREE.TextureLoader().load(option.texture_url, (texture) => {
-        texture.colorSpace = THREE.SRGBColorSpace;
-        target.material = target.material.clone();
-        target.material.map = texture;
-        target.material.needsUpdate = true;
-      });
-    } else {
-      target.material = target.material.clone();
-      target.material.color.set(option.color_hex);
-    }
-  } else if (option.option_type === "wheels" || option.option_type === "exhaust") {
-    // A "style" for these types is a group of parts sharing a name prefix
-    // (e.g. mesh_name "Wheel_Offroad" covers Wheel_Offroad_FL/FR/RL/RR).
-    let matchedAny = false;
-    optionsByType[option.option_type].forEach((sibling) => {
-      const isSelected = sibling.id === option.id;
-      const meshes = meshesMatchingPrefix(sibling.mesh_name);
-      if (meshes.length > 0) matchedAny = matchedAny || sibling.id === option.id;
-      meshes.forEach((mesh) => {
-        mesh.visible = isSelected;
-      });
-    });
-    if (!matchedAny) {
-      console.warn(`No meshes matching "${option.mesh_name}" found in this car's model.`);
-      return;
-    }
-  }
+  let applied = false;
+  if (option.option_type === "paint") applied = applyPaint(option);
+  else if (option.option_type === "interior") applied = applyInterior(option);
+  else if (option.option_type === "decal") applied = await applyDecal(option);
+  else if (option.option_type === "wheels") applied = await applyWheels(option);
+  else if (option.option_type === "exhaust") applied = applyExhaust(option);
+  if (!applied) return;
 
   selectedOptionIds.add(option.id);
   optionsByType[option.option_type]
@@ -415,6 +684,7 @@ function applyPreselectedOptions() {
 
 function onModelReady() {
   scene.add(carRoot);
+  if (carData.paintMode === "palette") setupPalette();
   frameCameraFromDirection(VIEW_DIRECTIONS.front);
   addViewPresetButtons();
   addSaveControls();
@@ -442,6 +712,7 @@ if (carData.modelUrl) {
 
 function onResize() {
   camera.aspect = viewerEl.clientWidth / viewerEl.clientHeight;
+  applyViewOffset();
   camera.updateProjectionMatrix();
   renderer.setSize(viewerEl.clientWidth, viewerEl.clientHeight);
 }

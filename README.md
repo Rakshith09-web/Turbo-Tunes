@@ -29,6 +29,9 @@ Then open http://127.0.0.1:8000/. Stop with `Ctrl+C`.
     .venv\Scripts\pip install -r requirements.txt
     .venv\Scripts\python manage.py migrate
     .venv\Scripts\python manage.py createsuperuser
+    .venv\Scripts\python manage.py seed_demo_cars
+
+`seed_demo_cars` loads the five demo cars with all their options. It's safe to run again.
 
 ## Pages
 
@@ -51,13 +54,15 @@ Then open http://127.0.0.1:8000/. Stop with `Ctrl+C`.
 - `accounts/` registration, login, `Profile`
 - `garage/` saved builds
 - `templates/`, `static/` shared layout and styling
+- `cars/seed_assets/` the demo models, thumbnails and their license
 - `docs/` synopsis, design spec, implementation plan and the UI mockup
 
 ## Notes
 
-- The car is currently a built-in placeholder made of simple shapes. To use a real model, upload a `.glb`
-  file as the car's "model file" in the admin panel; its parts must be named to match each option's
-  "mesh name".
+- The demo cars use free CC0 models from the Kenney Car Kit (see `cars/seed_assets/README.md`). They have
+  no interior or exhaust parts, so those cars offer paint, wheels, generated exhaust tips and decals.
+- To add your own car, upload a `.glb` as the car's "model file" in the admin panel and add its
+  customization options there. A car with no model file falls back to a built-in placeholder.
 - After editing CSS or JS, hard-refresh the browser (`Ctrl+Shift+R`), since the dev server doesn't send
   cache headers for static files.
 - Service booking is not built yet.

@@ -25,6 +25,39 @@ class CarModelTests(TestCase):
         self.assertEqual(option.option_type, "paint")
 
 
+class RealModelSupportTests(TestCase):
+    def test_paint_mode_defaults_to_tint(self):
+        car = Car.objects.create(name="Model S", brand="Volt Motors")
+
+        self.assertEqual(car.paint_mode, Car.PaintMode.TINT)
+        self.assertEqual(car.paint_region, "")
+
+    def test_option_part_file_is_optional(self):
+        car = Car.objects.create(name="Model S", brand="Volt Motors")
+        option = CustomizationOption.objects.create(
+            car=car, option_type="wheels", label="Stock", mesh_name="wheel-"
+        )
+
+        self.assertFalse(option.part_file)
+
+    def test_customizer_passes_paint_settings_and_part_urls_to_the_page(self):
+        car = Car.objects.create(
+            name="Sedan",
+            brand="Kenney",
+            paint_mode=Car.PaintMode.PALETTE,
+            paint_region="384,128,64,128",
+        )
+        CustomizationOption.objects.create(
+            car=car, option_type="wheels", label="Stock", mesh_name="wheel-"
+        )
+
+        response = self.client.get(reverse("car_customizer", args=[car.pk]))
+
+        self.assertContains(response, '"paintMode": "palette"')
+        self.assertContains(response, '"paintRegion": "384,128,64,128"')
+        self.assertContains(response, '"part_url": null')
+
+
 class CarGalleryViewTests(TestCase):
     def test_gallery_lists_all_cars(self):
         Car.objects.create(name="Model S", brand="Volt Motors")
