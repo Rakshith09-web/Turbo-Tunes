@@ -36,6 +36,18 @@ class CarGalleryViewTests(TestCase):
         self.assertContains(response, "Model S")
         self.assertContains(response, "Ranger")
 
+    def test_gallery_cards_link_to_each_cars_customizer(self):
+        car = Car.objects.create(name="Model S", brand="Volt Motors")
+
+        response = self.client.get(reverse("car_gallery"))
+
+        self.assertContains(response, f'href="{reverse("car_customizer", args=[car.pk])}"')
+
+    def test_nav_links_to_the_gallery(self):
+        response = self.client.get(reverse("car_gallery"))
+
+        self.assertContains(response, f'href="{reverse("car_gallery")}"')
+
 
 class CarCustomizerViewTests(TestCase):
     def test_customizer_page_embeds_car_and_options_json(self):

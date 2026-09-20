@@ -7,9 +7,9 @@
     {% for car in cars %}
       <div class="car-card">
         {% if car.thumbnail %}
-          <img src="{{ car.thumbnail.url }}" alt="{{ car }}" />
+          <a href="{% url 'car_customizer' car.id %}"><img src="{{ car.thumbnail.url }}" alt="{{ car }}" /></a>
         {% endif %}
-        <h2>{{ car }}</h2>
+        <h2><a href="{% url 'car_customizer' car.id %}">{{ car }}</a></h2>
         <p>{{ car.description }}</p>
       </div>
     {% empty %}

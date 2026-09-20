@@ -14,6 +14,7 @@
   <nav class="site-nav">
     <a href="{% url 'home' %}" class="brand">AUTOCRAFT</a>
     <div class="nav-links">
+      <a href="{% url 'car_gallery' %}">All Cars</a>
       {% if user.is_authenticated %}
         <a href="{% url 'my_garage' %}">My Garage</a>
         <form action="{% url 'logout' %}" method="post" class="logout-form">
