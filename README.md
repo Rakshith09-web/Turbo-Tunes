@@ -42,6 +42,9 @@ Then open http://127.0.0.1:8000/. Stop with `Ctrl+C`.
 | `/cars/<id>/` | Customizer for one car |
 | `/accounts/register/`, `/accounts/login/` | Sign up and log in |
 | `/garage/` | My Garage (saved builds, login required) |
+| `/service/book/` | Book a service: the mechanic comes to the customer (login required) |
+| `/service/` | My service requests, with status |
+| `/service/<id>/` | One request: details, progress and cancel |
 | `/admin/` | Admin panel: add cars and customization options |
 
 ## Tests
@@ -53,6 +56,7 @@ Then open http://127.0.0.1:8000/. Stop with `Ctrl+C`.
 - `cars/` catalog, customizer page and the Three.js viewer (`cars/static/cars/js/viewer.js`)
 - `accounts/` registration, login, `Profile`
 - `garage/` saved builds
+- `bookings/` service booking: requests, the booking form and the 3D preview of the customer's car
 - `templates/`, `static/` shared layout and styling
 - `cars/seed_assets/` the demo models, thumbnails and their license
 - `docs/` synopsis, design spec, implementation plan and the UI mockup
@@ -65,4 +69,8 @@ Then open http://127.0.0.1:8000/. Stop with `Ctrl+C`.
   customization options there. A car with no model file falls back to a built-in placeholder.
 - After editing CSS or JS, hard-refresh the browser (`Ctrl+Shift+R`), since the dev server doesn't send
   cache headers for static files.
-- Service booking is not built yet.
+- Service requests are managed by staff in the admin panel (`/admin/` > Service requests): filter by status or date,
+  search by registration number, and use the actions to mark requests confirmed, in progress or completed.
+  Customers can cancel a request themselves until it is in progress.
+- The booking page shows the customer's car in 3D using the closest of our showroom body styles, since we can't
+  model every make and model.

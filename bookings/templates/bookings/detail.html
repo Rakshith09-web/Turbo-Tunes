@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ service_request.reference }} — AutoCraft 3D{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'bookings/css/bookings.css' %}" />
+  {% if car_display %}{% include "includes/three_importmap.html" %}{% endif %}
+{% endblock %}
+{% block content %}
+  <div class="page-in">
+    <header class="page-head">
+      <div>
+        <h1>{{ service_request.get_service_type_display }}</h1>
+        <p class="lede tnum">{{ service_request.reference }} · requested {{ service_request.created_at|date:"j M Y" }}</p>
+      </div>
+      <span class="status status-{{ service_request.status }}">{{ service_request.get_status_display }}</span>
+    </header>
+
+    <div class="detail-layout">
+      <section class="panel">
+        <h2 class="panel-title">Details</h2>
+        <dl class="detail-list">
+          <div><dt>Car</dt><dd>{{ service_request.vehicle_make_model }}</dd></div>
+          <div><dt>Registration</dt><dd class="tnum">{{ service_request.registration_number }}</dd></div>
+          <div><dt>When</dt><dd class="tnum">{{ service_request.preferred_date|date:"l, j F Y" }}<br />{{ service_request.get_time_slot_display }}</dd></div>
+          <div><dt>Where</dt><dd class="pre">{{ service_request.address }}</dd></div>
+          <div><dt>Phone</dt><dd class="tnum">{{ service_request.phone }}</dd></div>
+          {% if service_request.notes %}<div><dt>Notes</dt><dd class="pre">{{ service_request.notes }}</dd></div>{% endif %}
+        </dl>
+      </section>
+
+      <aside class="detail-side">
+        <div class="panel">
+          {% if car_display %}
+            {{ car_display|json_script:"car-display-data" }}
+            <div id="car-preview" class="car-preview detail-car" role="img" aria-label="3D view of your car">
+              {% if service_request.body_style.thumbnail %}<img src="{{ service_request.body_style.thumbnail.url }}" alt="" />{% endif %}
+            </div>
+          {% elif service_request.body_style and service_request.body_style.thumbnail %}
+            <img class="detail-car" src="{{ service_request.body_style.thumbnail.url }}" alt="" />
+          {% endif %}
+          {% if service_request.vehicle_color %}
+            <p class="detail-color"><span class="dot" style="background: {{ service_request.vehicle_color }}"></span>{{ service_request.get_vehicle_color_display }}</p>
+          {% endif %}
+
+          <h2 class="panel-title">Progress</h2>
+          {% if service_request.progress_steps %}
+            <ol class="track">
+              {% for step in service_request.progress_steps %}
+                <li class="{% if step.done %}done{% endif %}{% if step.current %} current{% endif %}"{% if step.current %} aria-current="step"{% endif %}>{{ step.label }}</li>
+              {% endfor %}
+            </ol>
+          {% else %}
+            <p class="hint">This request was cancelled. You can book a new one any time.</p>
+          {% endif %}
+
+          <div class="detail-actions">
+            {% if service_request.can_cancel %}
+              <form method="post" action="{% url 'cancel_service' service_request.pk %}" onsubmit="return confirm('Cancel this request?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-block">Cancel request</button>
+              </form>
+            {% endif %}
+            <a class="btn btn-quiet btn-block" href="{% url 'my_requests' %}">Back to all requests</a>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+  {% if car_display %}<script type="module" src="{% static 'bookings/js/car-display.js' %}"></script>{% endif %}
+{% endblock %}

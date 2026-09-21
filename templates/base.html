@@ -15,8 +15,10 @@
     <a href="{% url 'home' %}" class="brand">AUTOCRAFT</a>
     <div class="nav-links">
       <a href="{% url 'car_gallery' %}">All Cars</a>
+      <a href="{% url 'book_service' %}">Book Service</a>
       {% if user.is_authenticated %}
         <a href="{% url 'my_garage' %}">My Garage</a>
+        <a href="{% url 'my_requests' %}">My Requests</a>
         <form action="{% url 'logout' %}" method="post" class="logout-form">
           {% csrf_token %}
           <button type="submit">Log out</button>
@@ -28,6 +30,7 @@
     </div>
   </nav>
   <main>
+    {% include "includes/messages.html" %}
     {% block content %}{% endblock %}
   </main>
 </body>

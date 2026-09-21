@@ -3,14 +3,7 @@
 {% block title %}{{ car }} — Customizer{% endblock %}
 {% block extra_head %}
   <link rel="stylesheet" href="{% static 'cars/css/customizer.css' %}" />
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-    }
-  }
-  </script>
+  {% include "includes/three_importmap.html" %}
 {% endblock %}
 {% block content %}
   <div class="customizer-hero">

@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DecalGeometry } from "three/addons/geometries/DecalGeometry.js";
+import { createPalettePainter } from "./palette.js";
 
 const carData = JSON.parse(document.getElementById("car-data").textContent);
 const viewerEl = document.getElementById("viewer");
@@ -229,61 +230,16 @@ function findMeshByName(name) {
 }
 
 // ---- Paint -------------------------------------------------------------------------------
-// "palette" models take all their colours from one shared palette image, so painting the
-// car means recoloring just the body's swatch in a copy of that image.
-let palette = null;
+// "palette" models colour themselves from one shared palette image; see palette.js.
+let palettePainter = null;
 
 function setupPalette() {
-  const region = (carData.paintRegion || "").split(",").map(Number);
-  if (region.length !== 4 || region.some(Number.isNaN)) return;
-
-  let sourceMap = null;
-  carRoot.traverse((child) => {
-    if (!sourceMap && child.isMesh && child.material && child.material.map) {
-      sourceMap = child.material.map;
-    }
-  });
-  if (!sourceMap) return;
-
-  const image = sourceMap.image;
-  const canvas = document.createElement("canvas");
-  canvas.width = image.width;
-  canvas.height = image.height;
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(image, 0, 0);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.flipY = sourceMap.flipY;
-  texture.colorSpace = sourceMap.colorSpace;
-  texture.magFilter = sourceMap.magFilter;
-  texture.minFilter = sourceMap.minFilter;
-
-  const swapped = new Set();
-  carRoot.traverse((child) => {
-    if (child.isMesh && child.material && child.material.map === sourceMap && !swapped.has(child.material)) {
-      swapped.add(child.material);
-      child.material.map = texture;
-      child.material.needsUpdate = true;
-    }
-  });
-
-  palette = { ctx, texture, region };
-}
-
-function shadeHex(hex, factor) {
-  const value = parseInt(hex.replace("#", ""), 16);
-  const channel = (shift) => Math.max(0, Math.min(255, Math.round(((value >> shift) & 255) * factor)));
-  return `rgb(${channel(16)}, ${channel(8)}, ${channel(0)})`;
+  palettePainter = createPalettePainter(carRoot, carData.paintRegion);
 }
 
 function paintPalette(hex) {
-  if (!palette) return false;
-  const [x, y, w, h] = palette.region;
-  palette.ctx.fillStyle = hex;
-  palette.ctx.fillRect(x, y, w / 2, h);
-  palette.ctx.fillStyle = shadeHex(hex, 0.86);
-  palette.ctx.fillRect(x + w / 2, y, w / 2, h);
-  palette.texture.needsUpdate = true;
+  if (!palettePainter) return false;
+  palettePainter.paint(hex);
   return true;
 }
 

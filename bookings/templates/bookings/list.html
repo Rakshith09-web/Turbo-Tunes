@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}My service requests — AutoCraft 3D{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'bookings/css/bookings.css' %}" />{% endblock %}
+{% block content %}
+  <div class="page-in">
+    <header class="page-head">
+      <div>
+        <h1>Service requests</h1>
+        <p class="lede">Everything you've booked, newest first.</p>
+      </div>
+      <a class="btn btn-primary" href="{% url 'book_service' %}">Book a service</a>
+    </header>
+
+    {% if requests %}
+      <ul class="request-list">
+        {% for item in requests %}
+          <li>
+            <a class="request-row" href="{% url 'service_detail' item.pk %}">
+              {% if item.body_style and item.body_style.thumbnail %}
+                <img class="request-thumb" src="{{ item.body_style.thumbnail.url }}" alt="" />
+              {% else %}
+                <span class="request-thumb request-thumb-empty" aria-hidden="true"></span>
+              {% endif %}
+              <span class="request-main">
+                <span class="request-title">{{ item.get_service_type_display }}</span>
+                <span class="request-sub">
+                  {% if item.vehicle_color %}<span class="dot" style="background: {{ item.vehicle_color }}" title="{{ item.get_vehicle_color_display }}"></span>{% endif %}
+                  <span class="text">{{ item.vehicle_make_model }} · <span class="tnum">{{ item.registration_number }}</span></span>
+                </span>
+              </span>
+              <span class="request-when tnum">
+                {{ item.preferred_date|date:"D, j M" }}
+                <span class="request-slot">{{ item.get_time_slot_display }}</span>
+              </span>
+              <span class="status status-{{ item.status }}">{{ item.get_status_display }}</span>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="panel empty-state">
+        <h2>No service requests yet</h2>
+        <p>When your car needs a service, book it here and a mechanic will come to you.</p>
+        <a class="btn btn-primary" href="{% url 'book_service' %}">Book your first service</a>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

@@ -1,10 +1,26 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Log in — AutoCraft 3D{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'auth.css' %}" />{% endblock %}
 {% block content %}
-  <h1>Log in</h1>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Log in</button>
-  </form>
+  <div class="auth page-in">
+    {% include "accounts/_showcase.html" %}
+    <section class="auth-panel panel">
+      <h1>Welcome back</h1>
+      <p class="lede">{% if next %}Log in to continue.{% else %}Log in to save your builds and book a service.{% endif %}</p>
+
+      <form method="post" class="auth-form" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}" />
+        {% if form.non_field_errors %}
+          <div class="form-alert" role="alert">{{ form.non_field_errors.0 }}</div>
+        {% endif %}
+        {% include "includes/field.html" with field=form.username %}
+        {% include "includes/field.html" with field=form.password %}
+        <button class="btn btn-primary btn-block" type="submit">Log in</button>
+      </form>
+
+      <p class="auth-alt">New to AutoCraft? <a href="{% url 'register' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Create an account</a></p>
+    </section>
+  </div>
 {% endblock %}

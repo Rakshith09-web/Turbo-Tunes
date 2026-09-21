@@ -1,10 +1,27 @@
 {% extends "base.html" %}
-{% block title %}Register — AutoCraft 3D{% endblock %}
+{% load static %}
+{% block title %}Create your account — AutoCraft 3D{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'auth.css' %}" />{% endblock %}
 {% block content %}
-  <h1>Create an account</h1>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Register</button>
-  </form>
+  <div class="auth page-in">
+    {% include "accounts/_showcase.html" %}
+    <section class="auth-panel panel">
+      <h1>Create your account</h1>
+      <p class="lede">Keep your custom builds in My Garage and track your service requests.</p>
+
+      <form method="post" class="auth-form" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}" />
+        {% if form.non_field_errors %}
+          <div class="form-alert" role="alert">{{ form.non_field_errors.0 }}</div>
+        {% endif %}
+        {% include "includes/field.html" with field=form.username %}
+        {% include "includes/field.html" with field=form.password1 %}
+        {% include "includes/field.html" with field=form.password2 %}
+        <button class="btn btn-primary btn-block" type="submit">Create account</button>
+      </form>
+
+      <p class="auth-alt">Already have an account? <a href="{% url 'login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Log in</a></p>
+    </section>
+  </div>
 {% endblock %}

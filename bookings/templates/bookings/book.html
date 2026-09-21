@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Book a service — AutoCraft 3D{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'bookings/css/bookings.css' %}" />
+  {% include "includes/three_importmap.html" %}
+{% endblock %}
+{% block content %}
+  <div class="page-in">
+    <header class="page-head">
+      <div>
+        <h1>Book a service</h1>
+        <p class="lede">A mechanic comes to you. Tell us about your car and where to find it, and we'll confirm a slot.</p>
+      </div>
+    </header>
+
+    {{ preview|json_script:"car-preview-data" }}
+
+    <div class="book-layout">
+      <form method="post" class="book-form" id="book-form" novalidate>
+        {% csrf_token %}
+        {% if form.errors %}
+          <div class="form-alert" role="alert">A few details need another look. They're marked below.</div>
+        {% endif %}
+
+        <section class="form-block">
+          <h2>What does your car need?</h2>
+          <fieldset class="field{% if form.service_type.errors %} has-error{% endif %}">
+            <legend class="visually-hidden">{{ form.service_type.label }}</legend>
+            <div class="choice-group">
+              {% for radio in form.service_type %}
+                <label class="choice pill">{{ radio.tag }}<span>{{ radio.choice_label }}</span></label>
+              {% endfor %}
+            </div>
+            {% for error in form.service_type.errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}
+          </fieldset>
+        </section>
+
+        <section class="form-block">
+          <h2>Your car</h2>
+          <div class="field-row">
+            {% include "includes/field.html" with field=form.vehicle_make_model %}
+            {% include "includes/field.html" with field=form.registration_number %}
+          </div>
+
+          <fieldset class="field{% if form.body_style.errors %} has-error{% endif %}">
+            <legend>{{ form.body_style.label }}</legend>
+            <p class="hint">We can't show every model, so pick the shape nearest to yours. It's only used for the picture.</p>
+            <div class="choice-group style-group">
+              {% for radio in form.body_style %}
+                <label class="choice style-choice">
+                  {{ radio.tag }}
+                  <span class="tile">
+                    {% if radio.data.value.instance.thumbnail %}<img src="{{ radio.data.value.instance.thumbnail.url }}" alt="" />{% endif %}
+                    {{ radio.choice_label }}
+                  </span>
+                </label>
+              {% endfor %}
+            </div>
+            {% for error in form.body_style.errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}
+          </fieldset>
+
+          <fieldset class="field">
+            <legend>{{ form.vehicle_color.label }}</legend>
+            <div class="choice-group">
+              {% for radio in form.vehicle_color %}
+                <label class="choice swatch-choice" title="{{ radio.choice_label }}">
+                  {{ radio.tag }}<span style="background: {{ radio.data.value }}"></span>
+                  <span class="visually-hidden">{{ radio.choice_label }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </fieldset>
+        </section>
+
+        <section class="form-block">
+          <h2>Where and when</h2>
+          {% include "includes/field.html" with field=form.address %}
+          <div class="field-row">
+            {% include "includes/field.html" with field=form.phone %}
+            {% include "includes/field.html" with field=form.preferred_date %}
+          </div>
+          <fieldset class="field{% if form.time_slot.errors %} has-error{% endif %}">
+            <legend>{{ form.time_slot.label }}</legend>
+            <div class="choice-group">
+              {% for radio in form.time_slot %}
+                <label class="choice pill">{{ radio.tag }}<span>{{ radio.choice_label }}</span></label>
+              {% endfor %}
+            </div>
+            {% for error in form.time_slot.errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}
+          </fieldset>
+        </section>
+
+        <section class="form-block">
+          <h2>Anything else?</h2>
+          {% include "includes/field.html" with field=form.notes %}
+          <label class="check">{{ form.remember_details }}<span>{{ form.remember_details.label }}</span></label>
+        </section>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary btn-lg">Request service</button>
+          <p class="hint">You can cancel from My Requests until the mechanic is on the way.</p>
+        </div>
+      </form>
+
+      <aside class="book-aside" aria-label="Your car">
+        <div class="panel preview-panel">
+          <div id="car-preview" class="car-preview" role="img" aria-label="3D preview of your car"></div>
+          <p class="preview-caption" id="preview-caption">Drag to turn it around</p>
+          <dl class="summary">
+            <div><dt>Service</dt><dd data-summary="service">Not chosen yet</dd></div>
+            <div><dt>Car</dt><dd data-summary="car">Not entered yet</dd></div>
+            <div><dt>When</dt><dd data-summary="when">Not chosen yet</dd></div>
+          </dl>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <script type="module" src="{% static 'bookings/js/car-preview.js' %}"></script>
+{% endblock %}
