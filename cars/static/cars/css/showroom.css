@@ -23,7 +23,13 @@
   background: radial-gradient(ellipse at 50% 80%, rgba(32, 31, 28, 0.09) 0%, rgba(32, 31, 28, 0) 62%), var(--bg);
   will-change: transform, opacity;
 }
-.showroom-stage canvas { display: block; width: 100%; height: 100%; }
+.showroom-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: scale(1.8);
+  transform-origin: center center;
+}
 
 .showroom-progress {
   position: absolute;
@@ -100,6 +106,9 @@
   .showroom { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; margin: -8px -20px -40px; }
   .showroom-stage-wrap { padding: 12px 20px; }
   .showroom-stage { aspect-ratio: auto; height: 100%; }
+  /* The mobile stage is a different shape (fills half the viewport height, not a 6:5 box), so
+     the desktop-only 1.8x zoom would crop the car awkwardly — keep it at native size here. */
+  .showroom-stage canvas { transform: none; }
   .showroom-progress { right: 8px; }
   .showroom-list { padding: 0 20px; }
   .showroom-entry {
