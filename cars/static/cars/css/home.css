@@ -17,31 +17,39 @@
   position: absolute;
   inset: 0;
   pointer-events: none; /* ambient background only — clicks pass through to the CTA */
+  opacity: 0.16; /* a watermark, not the focal object — the text stays the thing you read */
+  filter: grayscale(0.6);
 }
 .home-hero-stage canvas { display: block; width: 100%; height: 100%; }
 
-/* A soft halo of the page colour around the text itself, rather than a panel over the scene,
-   so the car stays fully visible and only the letters get the legibility boost they need. */
 .home-hero-content {
   position: relative;
   z-index: 1;
   max-width: 620px;
   padding: 0 24px;
-  text-shadow: 0 0 4px var(--bg), 0 0 14px var(--bg), 0 0 28px var(--bg);
 }
 .home-hero h1 {
+  font-family: "Fraunces", Georgia, "Times New Roman", serif;
+  font-size: clamp(2.75rem, 1.9rem + 3.8vw, 4.75rem);
+  font-weight: 600;
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+  line-height: 1.02;
+  color: var(--fg);
+}
+.home-hero-tagline {
   font-family: "Space Grotesk", system-ui, sans-serif;
-  font-size: clamp(2.4rem, 1.5rem + 3.6vw, 4.25rem);
+  font-size: clamp(1.05rem, 0.9rem + 0.6vw, 1.3rem);
   font-weight: 500;
-  letter-spacing: -0.02em;
-  line-height: 1.08;
-  margin-top: 12px;
+  letter-spacing: -0.005em;
+  color: var(--fg);
+  margin-top: 18px;
 }
 .home-hero-lede {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   line-height: 1.6;
   color: var(--text-soft);
-  margin: 18px auto 0;
+  margin: 10px auto 0;
   max-width: 42ch;
 }
 
