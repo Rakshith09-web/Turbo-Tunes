@@ -37,7 +37,7 @@ class SeedDemoCarsCommandTests(TestCase):
         self.assertTrue(sedan.thumbnail.name.endswith(".png"))
         self.assertTrue(all(car.thumbnail for car in Car.objects.filter(brand="AutoCraft")))
         types = set(sedan.options.values_list("option_type", flat=True))
-        self.assertEqual(types, {"paint", "exhaust"})
+        self.assertEqual(types, {"paint", "wheels", "exhaust", "decal"})
 
     def test_paint_options_all_target_the_cars_own_paint_mesh(self):
         call_command("seed_demo_cars", verbosity=0)
@@ -46,6 +46,28 @@ class SeedDemoCarsCommandTests(TestCase):
         mesh_names = set(sedan.options.filter(option_type="paint").values_list("mesh_name", flat=True))
         self.assertEqual(len(mesh_names), 1)
         self.assertTrue(next(iter(mesh_names)))
+
+    def test_wheel_colour_options_have_no_texture_or_part_file(self):
+        call_command("seed_demo_cars", verbosity=0)
+
+        wheels = Car.objects.get(name="Sedan").options.filter(option_type="wheels")
+        self.assertGreaterEqual(wheels.count(), 2)
+        self.assertTrue(all(w.color_hex for w in wheels))
+        self.assertTrue(all(not w.part_file for w in wheels))
+
+    def test_future_racer_has_no_wheel_options(self):
+        call_command("seed_demo_cars", verbosity=0)
+
+        racer = Car.objects.get(name="Future Racer")
+        self.assertFalse(racer.options.filter(option_type="wheels").exists())
+
+    def test_decal_options_include_a_real_texture_and_a_none_choice(self):
+        call_command("seed_demo_cars", verbosity=0)
+
+        decals = Car.objects.get(name="Sedan").options.filter(option_type="decal")
+        self.assertEqual(decals.count(), 2)
+        self.assertTrue(any(d.texture_file for d in decals))
+        self.assertTrue(any(not d.texture_file for d in decals))
 
     def test_reseeding_replaces_a_stale_model_file(self):
         call_command("seed_demo_cars", verbosity=0)

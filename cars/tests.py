@@ -98,7 +98,7 @@ class CarGalleryViewTests(TestCase):
         response = self.client.get(reverse("car_gallery"))
 
         highlights = response.context["showroom"][0]["highlights"]
-        self.assertEqual(highlights, ["2 paint colours", "1 wheel design"])
+        self.assertEqual(highlights, ["2 paint colours", "1 wheel finish"])
 
     def test_gallery_passes_3d_model_details_to_the_page(self):
         car = self.make_car("sedan", paint_mode=Car.PaintMode.PALETTE, paint_region="384,128,64,128")

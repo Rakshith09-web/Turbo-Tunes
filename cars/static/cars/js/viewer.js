@@ -229,6 +229,17 @@ function findMeshByName(name) {
   return found;
 }
 
+// mesh_name may be a comma-separated list — some cars have their body paint split across
+// several meshes (doors, hood, fenders...) that share one material but never got joined into one.
+function meshesMatchingNames(commaSeparatedNames) {
+  const names = commaSeparatedNames.split(",").map((n) => n.trim().toLowerCase());
+  const matches = [];
+  carRoot.traverse((child) => {
+    if (child.isMesh && names.includes(child.name.toLowerCase())) matches.push(child);
+  });
+  return matches;
+}
+
 // ---- Paint -------------------------------------------------------------------------------
 // "palette" models colour themselves from one shared palette image; see palette.js.
 let palettePainter = null;
@@ -243,19 +254,39 @@ function paintPalette(hex) {
   return true;
 }
 
+// material.color multiplies the existing colour texture, so on a baked, unevenly-lit photo
+// the result stays muddy and doesn't match the swatch. Dropping the colour map and painting
+// the bare material gives an exact, even colour — normal maps are left alone, so panel lines
+// and reflections still read through the lighting, just not the baked paint photo.
+//
+// Some of these scanned models have no real metallic/roughness texture, so metalness defaults
+// to glTF's spec default of 1 (fully metallic) with roughness 1 (fully matte) — with no
+// environment map in this scene to reflect, that combination renders almost black no matter
+// the colour. A clean gloss-paint response (some metalness, moderate roughness) reads clearly
+// under the scene's own lights instead.
+function tintMesh(target, hex) {
+  target.material = target.material.clone();
+  target.material.map = null;
+  target.material.metalnessMap = null;
+  target.material.roughnessMap = null;
+  target.material.metalness = 0.55;
+  target.material.roughness = 0.35;
+  target.material.color.set(hex);
+  target.material.needsUpdate = true;
+}
+
 function applyPaint(option) {
   if (carData.paintMode === "palette") {
     if (paintPalette(option.color_hex)) return true;
     console.warn("This car is set to palette paint but its palette couldn't be found.");
     return false;
   }
-  const target = findMeshByName(option.mesh_name);
-  if (!target) {
+  const targets = meshesMatchingNames(option.mesh_name);
+  if (!targets.length) {
     console.warn(`Mesh "${option.mesh_name}" not found in this car's model.`);
     return false;
   }
-  target.material = target.material.clone();
-  target.material.color.set(option.color_hex);
+  targets.forEach((target) => tintMesh(target, option.color_hex));
   return true;
 }
 
@@ -265,8 +296,7 @@ function applyInterior(option) {
     console.warn(`Mesh "${option.mesh_name}" not found in this car's model.`);
     return false;
   }
-  target.material = target.material.clone();
-  target.material.color.set(option.color_hex);
+  tintMesh(target, option.color_hex);
   return true;
 }
 
@@ -341,6 +371,18 @@ function showOnly(option) {
 }
 
 async function applyWheels(option) {
+  // A colour option (these realistic cars: one rim finish tinted directly, same as paint) —
+  // checked first since it's the cheap, common case.
+  if (option.color_hex) {
+    const targets = meshesMatchingNames(option.mesh_name);
+    if (!targets.length) {
+      console.warn(`Mesh "${option.mesh_name}" not found in this car's model.`);
+      return false;
+    }
+    targets.forEach((target) => tintMesh(target, option.color_hex));
+    return true;
+  }
+  // Older Kenney-style cars: swap in a whole alternate wheel shape, or show/hide a stock set.
   const wheels = sideWheels(option.mesh_name);
   if (wheels.length > 0) {
     await swapWheels(option, wheels);
@@ -547,7 +589,10 @@ function renderSwatchRow() {
 
   const type = activeCategory;
   const options = optionsByType[type] || [];
-  const isColorType = type === "paint" || type === "interior";
+  // Wheels are swatches when they're colour options (these cars) and pills when they're named
+  // styles/shapes (older Kenney-style cars with a part_file swap) — decided by what's seeded.
+  const isColorType =
+    type === "paint" || type === "interior" || (options.length > 0 && options.every((o) => o.color_hex));
 
   const label = document.createElement("span");
   label.className = "swatch-row-label";

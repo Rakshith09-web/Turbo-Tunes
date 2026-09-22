@@ -17,7 +17,7 @@ HERO_WATERMARK_PATH = "cars/models/hero-suv.glb"
 HIGHLIGHT_ORDER = ["paint", "wheels", "exhaust", "interior", "decal"]
 HIGHLIGHT_NOUNS = {
     "paint": ("paint colour", "paint colours"),
-    "wheels": ("wheel design", "wheel designs"),
+    "wheels": ("wheel finish", "wheel finishes"),
     "exhaust": ("exhaust style", "exhaust styles"),
     "interior": ("interior colour", "interior colours"),
     "decal": ("decal", "decals"),
