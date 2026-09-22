@@ -1,14 +1,16 @@
+/* The nav sits above this and is sticky (see base.css), so the showroom fills exactly what's
+   left — its own scroller, snapping to one car per scroll instead of scrolling the whole page. */
 .showroom {
+  --nav-height: 73px;
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  align-items: start;
-  margin: -8px -48px 0;
+  grid-template-columns: 7fr 3fr;
+  align-items: stretch;
+  height: calc(100vh - var(--nav-height));
+  margin: -8px -48px -48px;
+  overflow: hidden;
 }
 
 .showroom-stage-wrap {
-  position: sticky;
-  top: 0;
-  height: 100vh;
   display: flex;
   align-items: center;
   padding: 0 clamp(24px, 4vw, 56px);
@@ -19,6 +21,7 @@
   border-radius: 20px;
   overflow: hidden;
   background: radial-gradient(ellipse at 50% 80%, rgba(32, 31, 28, 0.09) 0%, rgba(32, 31, 28, 0) 62%), var(--bg);
+  will-change: transform, opacity;
 }
 .showroom-stage canvas { display: block; width: 100%; height: 100%; }
 
@@ -40,17 +43,27 @@
 }
 .showroom-dot.is-active { background: var(--accent-strong); opacity: 1; transform: scale(1.35); }
 
-.showroom-list { padding: 0 clamp(24px, 4vw, 56px); }
+.showroom-list {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y mandatory;
+  padding: 0 clamp(24px, 4vw, 56px);
+  scrollbar-width: none;
+}
+.showroom-list::-webkit-scrollbar { display: none; }
+
 .showroom-entry {
-  min-height: 100vh;
+  height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 14px;
-  padding: 48px 0;
-  opacity: 0.35;
-  transform: translateY(14px);
-  transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
+  opacity: 0.3;
+  transform: translateY(40px);
+  transition: opacity 0.42s var(--ease-out), transform 0.42s var(--ease-out);
 }
 .showroom-entry.is-active { opacity: 1; transform: none; }
 
@@ -84,14 +97,26 @@
 .showroom-entry .btn { width: fit-content; margin-top: 10px; }
 
 @media (max-width: 720px) {
-  .showroom { grid-template-columns: 1fr; margin: -8px -20px 0; }
-  .showroom-stage-wrap { position: sticky; top: 0; height: 46vh; padding: 16px 20px; z-index: 1; }
+  .showroom { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; margin: -8px -20px -40px; }
+  .showroom-stage-wrap { padding: 12px 20px; }
   .showroom-stage { aspect-ratio: auto; height: 100%; }
-  .showroom-progress { right: 12px; }
-  .showroom-list { padding: 0 20px 8px; }
-  .showroom-entry { min-height: 0; padding: 32px 0; }
+  .showroom-progress { right: 8px; }
+  .showroom-list { padding: 0 20px; }
+  .showroom-entry {
+    gap: 6px;
+    justify-content: flex-start;
+    padding-top: 14px;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .showroom-entry::-webkit-scrollbar { display: none; }
+  .showroom-entry h1 { font-size: clamp(1.6rem, 1.2rem + 2vw, 2.2rem); }
+  .showroom-lede { font-size: 0.95rem; }
+  .showroom-copy { font-size: 0.9rem; line-height: 1.5; }
+  .showroom-entry .btn { margin-top: 6px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .showroom-entry { transition: opacity 0.2s linear; transform: none; }
+  .showroom-stage { transition: none !important; }
 }

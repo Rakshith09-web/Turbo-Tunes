@@ -188,18 +188,24 @@ class CarCustomizerViewTests(TestCase):
 
 
 class HomeViewTests(TestCase):
-    def test_home_shows_the_first_cars_customizer(self):
-        Car.objects.create(name="Model S", brand="Volt Motors")
-        Car.objects.create(name="Ranger", brand="Trailblaze")
-
+    def test_home_introduces_the_site_and_links_to_all_cars(self):
         response = self.client.get(reverse("home"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Model S")
-        self.assertContains(response, "car-data")
+        self.assertContains(response, f'href="{reverse("car_gallery")}"')
+        self.assertContains(response, "My Garage")
 
-    def test_home_falls_back_to_empty_gallery_when_no_cars_exist(self):
+    def test_home_previews_only_cars_that_have_a_3d_model(self):
+        car = Car.objects.create(name="Sedan", brand="AutoCraft", model_file="cars/models/sedan.glb")
+        Car.objects.create(name="Placeholder", brand="AutoCraft")
+
         response = self.client.get(reverse("home"))
 
-        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Sedan")
+        self.assertContains(response, f'href="{reverse("car_customizer", args=[car.pk])}"')
+        self.assertNotContains(response, "Placeholder")
+
+    def test_home_says_so_when_there_are_no_cars_yet(self):
+        response = self.client.get(reverse("home"))
+
         self.assertContains(response, "No cars yet")

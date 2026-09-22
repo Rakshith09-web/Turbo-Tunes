@@ -32,10 +32,8 @@ def option_highlights(car):
 
 
 def home(request):
-    car = Car.objects.first()
-    if car is None:
-        return car_gallery(request)
-    return car_customizer(request, car.id)
+    cars = Car.objects.exclude(model_file="").exclude(model_file=None)
+    return render(request, "cars/home.html", {"cars": cars})
 
 
 def car_gallery(request):

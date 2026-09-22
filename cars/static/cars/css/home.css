@@ -1,0 +1,29 @@
+.home-hero {
+  max-width: 640px;
+  padding: clamp(32px, 6vw, 72px) 0 clamp(40px, 6vw, 64px);
+}
+.home-hero h1 {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: clamp(2.2rem, 1.5rem + 2.8vw, 3.5rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  margin-top: 10px;
+}
+.home-hero-lede {
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--text-soft);
+  margin: 20px 0 32px;
+  max-width: 56ch;
+}
+.home-hero-lede strong { color: var(--fg); font-weight: 600; }
+.btn-lg { padding: 1rem 2rem; font-size: 15px; }
+
+.home-cars { padding-bottom: 24px; }
+.home-cars h2 {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 1.4rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+}

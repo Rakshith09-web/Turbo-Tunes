@@ -9,13 +9,23 @@ from cars.models import Car, CustomizationOption
 
 
 class FeaturedCarTests(TestCase):
-    def test_featured_car_is_listed_and_shown_on_home_first(self):
-        Car.objects.create(name="Older", brand="Volt Motors")
-        featured = Car.objects.create(name="Star", brand="Volt Motors", featured=True)
+    def test_featured_car_sorts_first(self):
+        older = Car.objects.create(name="Older", brand="Volt Motors", model_file="cars/models/older.glb")
+        featured = Car.objects.create(
+            name="Star", brand="Volt Motors", featured=True, model_file="cars/models/star.glb"
+        )
 
-        self.assertEqual(Car.objects.first(), featured)
+        self.assertEqual(list(Car.objects.all()), [featured, older])
+
+    def test_featured_car_is_listed_first_on_home(self):
+        Car.objects.create(name="Older", brand="Volt Motors", model_file="cars/models/older.glb")
+        featured = Car.objects.create(
+            name="Star", brand="Volt Motors", featured=True, model_file="cars/models/star.glb"
+        )
+
         response = self.client.get(reverse("home"))
-        self.assertContains(response, "Star")
+
+        self.assertEqual(list(response.context["cars"])[0], featured)
 
 
 class SeedDemoCarsCommandTests(TestCase):

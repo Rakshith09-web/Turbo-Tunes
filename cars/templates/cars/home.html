@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}AutoCraft 3D{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'cars/css/home.css' %}" />{% endblock %}
+{% block content %}
+  <div class="page-in">
+    <section class="home-hero">
+      <p class="car-eyebrow">AutoCraft 3D</p>
+      <h1>Design your car in 3D, down to the last detail.</h1>
+      <p class="home-hero-lede">
+        Pick a car, then rotate it, change the paint, the wheels, the exhaust and add decals — all live, right
+        in your browser. Save a build to <strong>My Garage</strong> and come back to it any time, or book a
+        mechanic to come service your own car once it's ready.
+      </p>
+      <a class="btn btn-primary btn-lg" href="{% url 'car_gallery' %}">Explore All Cars</a>
+    </section>
+
+    {% if cars %}
+      <section class="home-cars">
+        <h2>Cars you can customize</h2>
+        <div class="car-grid">
+          {% for car in cars %}
+            <div class="car-card">
+              {% if car.thumbnail %}
+                <a href="{% url 'car_customizer' car.id %}"><img src="{{ car.thumbnail.url }}" alt="" /></a>
+              {% endif %}
+              <h2><a href="{% url 'car_customizer' car.id %}">{{ car.name }}</a></h2>
+              <p>{{ car.description }}</p>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    {% else %}
+      <div class="panel empty-state">
+        <h2>No cars yet</h2>
+        <p>Add one in the admin panel to see it here.</p>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
