@@ -13,11 +13,18 @@ ASSETS = Path(__file__).resolve().parents[2] / "seed_assets"
 # image — paint_mesh (and wheel_mesh) are exact mesh names inside the .glb, found by trial
 # rendering: paint a candidate mesh a bright colour, screenshot, check what actually turned
 # that colour. wheel_mesh is None where the model has no separate wheel geometry at all.
+#
+# spoiler_mesh: None means the car doesn't get a spoiler option at all. "generated" means
+# there's no real, separately-targetable spoiler part on this model (either not modelled, or
+# fused into the body as one continuous surface with nothing separate to grab), so a spoiler
+# is built in code instead (see viewer.js buildSpoiler). Anything else is the real mesh
+# name(s) of an actual spoiler part already on the model, found the same way as paint_mesh.
 CARS = [
     {"name": "Sedan", "thumb": "sedan.png", "file": "sedan.glb", "featured": True,
      "paint_mesh": "bPaint_Geo_lodA_Paint_Geo_lodA_BMW_M5SedanRewardRecycled_2024Paint_Material_bBMW_M5SedanRewardRecycled_2024Paint_Material1_0",
      "wheel_mesh": "polySurface148_bBMW_M5SedanRewardRecycled_2024_Wheel1A_3D_3DWheel2A_Material1_0",
-     "spoiler": True,
+     # The real BMW M5 doesn't have a spoiler, and neither does this model — generated.
+     "spoiler_mesh": "generated",
      "description": "A balanced everyday four-door.",
      "long_description": "Four doors, a proper boot and a calm, upright shape. It is the easy everyday pick, and a clean canvas for paint."},
     {"name": "Sports Sedan", "thumb": "sports-sedan.png", "file": "sedan-sports.glb",
@@ -28,7 +35,10 @@ CARS = [
          "porscheporschepolySurface457_porschePorsche_TaycanTurboGTReward_2025_Wheel1A_3D_3DWheel1A_Material1_0,"
          "porscheporschepolySurface689_porschePorsche_TaycanTurboGTReward_2025_Wheel1A_3D_3DWheel1A_Material1_0"
      ),
-     "spoiler": True,
+     # This model's fixed wing is genuinely part of the same continuous "Paint" surface as
+     # the rest of the body (checked every other material on the model — none is a separate
+     # wing) — no real part to grab, so generated, same as the sedan.
+     "spoiler_mesh": "generated",
      "description": "A sportier sedan-coupe with serious performance.",
      "long_description": "Low, wide and built for speed, with a fixed rear wing. Add a bold colour and dual exhaust tips and it is ready for the weekend."},
     {"name": "SUV", "thumb": "suv.png", "file": "suv.glb",
@@ -37,13 +47,19 @@ CARS = [
      # model), so "wheel colour" here tints brakes along with the rims — a small trade-off,
      # not worth reprocessing for.
      "wheel_mesh": "brake-caliper-fl_wheels-brakes_0",
-     "spoiler": False,
+     "spoiler_mesh": None,
      "description": "Tall, roomy and ready for anything.",
      "long_description": "A tall, rugged body built for comfort over rough roads. Try a deep green or graphite finish."},
     {"name": "Sports Hatchback", "thumb": "sports-hatchback.png", "file": "hatchback-sports.glb",
      "paint_mesh": "A45SK_Hood_101_SK_Hood_101_MI_1236020001_004_A45MI_1236020001_002_0",
      "wheel_mesh": "A45Ani_Wheel_BR112_A45MI_ChangeA_Rim1_0",
-     "spoiler": True,
+     # A real, separate roof-spoiler part — reprocessed to keep it out of the join step that
+     # otherwise merges it into the main body mesh (see README's processing notes). Two
+     # primitives: the visible wing panel and a thin trim/mount edge around it.
+     "spoiler_mesh": (
+         "A45SK_Spoiler_101_SK_Spoiler_101_MI_Exhaust_006_A45MI_Exhaust1_0,"
+         "A45SK_Spoiler_101_SK_Spoiler_101_MI_Exhaust_007_A45MI_1236020001_002_0"
+     ),
      "description": "A compact hot hatch.",
      "long_description": "Compact and easy to park, with sporty lines and a roof spoiler. It is the playful one in the lineup, and bright paint suits it well."},
     {"name": "Future Racer", "thumb": "future-racer.png", "file": "race-future.glb",
@@ -53,7 +69,7 @@ CARS = [
      "wheel_mesh": None,
      # Already has its own built-in rear wing as part of the model — a generated one on top
      # would look redundant.
-     "spoiler": False,
+     "spoiler_mesh": None,
      "description": "A low, wide open-wheel track machine.",
      "long_description": "An open-wheel racer built for the track, with wings at both ends. It is the most dramatic car here: pick a loud colour and fit dual exhaust tips."},
 ]
@@ -91,10 +107,8 @@ DECALS = [
     ("Racing Stripes", "racing_stripes.png"),
 ]
 
-# Built in code from the car's own bounding box (see viewer.js buildSpoiler), the same way
-# exhaust tips are — none of these cars have a real, separately-targetable spoiler part: it's
-# either fused into the body as one continuous surface (no separate mesh to grab), or, on the
-# sedan, not modelled at all. "None" (no colour) removes it.
+# "None" (no colour) hides the spoiler — either the generated one, or a real part that's
+# visible on the model by default.
 SPOILER_COLORS = [
     ("None", None),
     ("Gloss Black", "#17181A"),
@@ -132,13 +146,13 @@ class Command(BaseCommand):
             # left over from an older seeding so a car without one doesn't show a broken tab.
             if not spec["wheel_mesh"]:
                 car.options.filter(option_type="wheels").delete()
-            if not spec["spoiler"]:
+            if not spec["spoiler_mesh"]:
                 car.options.filter(option_type="spoiler").delete()
-            self.seed_options(car, spec["paint_mesh"], spec["wheel_mesh"], spec["spoiler"])
+            self.seed_options(car, spec["paint_mesh"], spec["wheel_mesh"], spec["spoiler_mesh"])
             if options["verbosity"]:
                 self.stdout.write(f"Seeded {car}")
 
-    def seed_options(self, car, paint_mesh, wheel_mesh, has_spoiler):
+    def seed_options(self, car, paint_mesh, wheel_mesh, spoiler_mesh):
         # Every paint swatch targets the same mesh, at a different colour.
         for label, hex_value in PAINTS:
             self.option(car, "paint", label, paint_mesh, color_hex=hex_value)
@@ -158,9 +172,10 @@ class Command(BaseCommand):
             elif decal.texture_file:
                 decal.texture_file.delete(save=True)
 
-        if has_spoiler:
+        if spoiler_mesh:
+            target = "generated:spoiler" if spoiler_mesh == "generated" else spoiler_mesh
             for label, hex_value in SPOILER_COLORS:
-                self.option(car, "spoiler", label, "generated:spoiler", color_hex=hex_value or "")
+                self.option(car, "spoiler", label, target, color_hex=hex_value or "")
 
     def option(self, car, option_type, label, mesh_name, **fields):
         option, _ = CustomizationOption.objects.update_or_create(

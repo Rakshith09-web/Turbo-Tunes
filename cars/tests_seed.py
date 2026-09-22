@@ -85,6 +85,15 @@ class SeedDemoCarsCommandTests(TestCase):
             car = Car.objects.get(name=name)
             self.assertFalse(car.options.filter(option_type="spoiler").exists())
 
+    def test_sports_hatchback_spoiler_targets_its_own_real_mesh(self):
+        call_command("seed_demo_cars", verbosity=0)
+
+        spoilers = Car.objects.get(name="Sports Hatchback").options.filter(option_type="spoiler")
+        self.assertGreaterEqual(spoilers.count(), 2)
+        mesh_names = set(spoilers.values_list("mesh_name", flat=True))
+        self.assertEqual(len(mesh_names), 1)
+        self.assertNotEqual(next(iter(mesh_names)), "generated:spoiler")
+
     def test_reseeding_replaces_a_stale_model_file(self):
         call_command("seed_demo_cars", verbosity=0)
         sedan = Car.objects.get(name="Sedan")

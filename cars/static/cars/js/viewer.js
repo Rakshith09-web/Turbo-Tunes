@@ -450,11 +450,16 @@ function buildSpoiler(hex) {
   const wingWidth = size.x * 0.76;
   const wingDepth = size.z * 0.09;
   const wingThickness = size.y * 0.03;
-  const strutHeight = size.y * 0.15;
+  const strutHeight = size.y * 0.16;
   const strutWidth = size.x * 0.025;
 
+  // box.max.y is the car's single tallest point (the roof, further forward), not the trunk
+  // lid height under the wing — mounting struts there left them floating well above the
+  // rear deck with a visible gap. A sedan-shaped trunk sits noticeably lower than the roof
+  // peak, so anchor to a height fraction that lands on the rear deck instead.
+  const deckY = box.min.y + size.y * 0.58;
   const wingZ = box.min.z + size.z * 0.05; // near the rear
-  const wingY = box.max.y + strutHeight;
+  const wingY = deckY + strutHeight;
 
   const wing = new THREE.Mesh(new THREE.BoxGeometry(wingWidth, wingThickness, wingDepth), material);
   wing.position.set(center.x, wingY, wingZ);
@@ -463,7 +468,7 @@ function buildSpoiler(hex) {
   const strutGeometry = new THREE.BoxGeometry(strutWidth, strutHeight, wingDepth * 0.55);
   [-1, 1].forEach((side) => {
     const strut = new THREE.Mesh(strutGeometry, material);
-    strut.position.set(center.x + side * wingWidth * 0.36, box.max.y + strutHeight / 2, wingZ);
+    strut.position.set(center.x + side * wingWidth * 0.36, deckY + strutHeight / 2, wingZ);
     group.add(strut);
   });
 
@@ -471,9 +476,25 @@ function buildSpoiler(hex) {
 }
 
 function applySpoiler(option) {
-  const existing = carRoot.getObjectByName("GeneratedSpoiler");
-  if (existing) carRoot.remove(existing);
-  if (option.color_hex) carRoot.add(buildSpoiler(option.color_hex));
+  if (option.mesh_name === "generated:spoiler") {
+    // No real spoiler part on this car (either not modelled, like the sedan, or fused into
+    // the body as one continuous surface with nothing separate to grab, like the sports
+    // sedan's fixed wing) — build one instead.
+    const existing = carRoot.getObjectByName("GeneratedSpoiler");
+    if (existing) carRoot.remove(existing);
+    if (option.color_hex) carRoot.add(buildSpoiler(option.color_hex));
+    return true;
+  }
+  // A real spoiler part exists on this car — colour it directly, or hide it for "None".
+  const targets = meshesMatchingNames(option.mesh_name);
+  if (!targets.length) {
+    console.warn(`Mesh "${option.mesh_name}" not found in this car's model.`);
+    return false;
+  }
+  targets.forEach((target) => {
+    target.visible = !!option.color_hex;
+    if (option.color_hex) tintMesh(target, option.color_hex);
+  });
   return true;
 }
 
