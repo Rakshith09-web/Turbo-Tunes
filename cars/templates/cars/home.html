@@ -1,40 +1,67 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}AutoCraft 3D{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'cars/css/home.css' %}" />{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'cars/css/home.css' %}" />
+  {% if hero_data %}{% include "includes/three_importmap.html" %}{% endif %}
+{% endblock %}
 {% block content %}
-  <div class="page-in">
-    <section class="home-hero">
-      <p class="car-eyebrow">AutoCraft 3D</p>
-      <h1>Design your car in 3D, down to the last detail.</h1>
-      <p class="home-hero-lede">
-        Pick a car, then rotate it, change the paint, the wheels, the exhaust and add decals — all live, right
-        in your browser. Save a build to <strong>My Garage</strong> and come back to it any time, or book a
-        mechanic to come service your own car once it's ready.
-      </p>
-      <a class="btn btn-primary btn-lg" href="{% url 'car_gallery' %}">Explore All Cars</a>
-    </section>
-
-    {% if cars %}
-      <section class="home-cars">
-        <h2>Cars you can customize</h2>
-        <div class="car-grid">
-          {% for car in cars %}
-            <div class="car-card">
-              {% if car.thumbnail %}
-                <a href="{% url 'car_customizer' car.id %}"><img src="{{ car.thumbnail.url }}" alt="" /></a>
-              {% endif %}
-              <h2><a href="{% url 'car_customizer' car.id %}">{{ car.name }}</a></h2>
-              <p>{{ car.description }}</p>
-            </div>
-          {% endfor %}
-        </div>
-      </section>
-    {% else %}
-      <div class="panel empty-state">
-        <h2>No cars yet</h2>
-        <p>Add one in the admin panel to see it here.</p>
-      </div>
+  <section class="home-hero">
+    {% if hero_data %}
+      {{ hero_data|json_script:"hero-car-data" }}
+      <div id="home-hero-stage" class="home-hero-stage" aria-hidden="true"></div>
     {% endif %}
-  </div>
+
+    <div class="home-hero-content">
+      <p class="car-eyebrow">AutoCraft 3D</p>
+      <h1>Design your car.<br />Down to the last detail.</h1>
+      <p class="home-hero-lede">Real-time 3D customization, saved builds, and service booking — all in one place.</p>
+    </div>
+
+    <a class="home-hero-cta" href="{% url 'car_gallery' %}">
+      <span class="home-hero-cta-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15M12 19l-6-6M12 19l6-6" /></svg>
+      </span>
+      Explore All Cars
+    </a>
+  </section>
+
+  <section class="home-features">
+    <article class="feature reveal">
+      <span class="feature-icon">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" /></svg>
+      </span>
+      <h2>Customize every detail</h2>
+      <p>Change the paint, wheels, exhaust and decals on any car in the lineup — sedans, SUVs, hatchbacks and
+        more — and watch it update instantly in 3D, from any angle.</p>
+    </article>
+
+    <article class="feature reveal">
+      <span class="feature-icon">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1Z" /></svg>
+      </span>
+      <h2>Save your build</h2>
+      <p>Found a look you love? Save it to <strong>My Garage</strong> and pick up right where you left off,
+        any time you come back.</p>
+    </article>
+
+    <article class="feature reveal">
+      <span class="feature-icon">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 1-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 1 5.4-5.4L15 12l-3-3 2.7-2.7Z" /></svg>
+      </span>
+      <h2>Book a service</h2>
+      <p>When your own car needs work, a mechanic comes to you. Choose a service, a time, and we'll take it
+        from there — track the whole request in My Requests.</p>
+    </article>
+  </section>
+
+  <section class="home-close reveal">
+    <h2>Ready to see it in 3D?</h2>
+    <div class="home-close-actions">
+      <a class="btn btn-primary btn-lg" href="{% url 'car_gallery' %}">Explore All Cars</a>
+      <a class="btn btn-quiet btn-lg" href="{% url 'book_service' %}">Book a Service</a>
+    </div>
+  </section>
+
+  {% if hero_data %}<script type="module" src="{% static 'cars/js/home.js' %}"></script>{% endif %}
 {% endblock %}

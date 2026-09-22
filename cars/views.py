@@ -32,8 +32,15 @@ def option_highlights(car):
 
 
 def home(request):
-    cars = Car.objects.exclude(model_file="").exclude(model_file=None)
-    return render(request, "cars/home.html", {"cars": cars})
+    hero_car = Car.objects.exclude(model_file="").exclude(model_file=None).first()
+    hero_data = None
+    if hero_car:
+        hero_data = {
+            "modelUrl": hero_car.model_file.url,
+            "paintMode": hero_car.paint_mode,
+            "paintRegion": hero_car.paint_region,
+        }
+    return render(request, "cars/home.html", {"hero_car": hero_car, "hero_data": hero_data})
 
 
 def car_gallery(request):

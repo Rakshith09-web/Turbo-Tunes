@@ -1,29 +1,138 @@
+/* ---- Hero ---------------------------------------------------------------- */
 .home-hero {
-  max-width: 640px;
-  padding: clamp(32px, 6vw, 72px) 0 clamp(40px, 6vw, 64px);
+  --nav-height: 69px;
+  position: relative;
+  height: calc(100vh - var(--nav-height));
+  min-height: 480px;
+  margin: -8px -48px 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.home-hero-stage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none; /* ambient background only — clicks pass through to the CTA */
+}
+.home-hero-stage canvas { display: block; width: 100%; height: 100%; }
+
+/* A soft halo of the page colour around the text itself, rather than a panel over the scene,
+   so the car stays fully visible and only the letters get the legibility boost they need. */
+.home-hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 620px;
+  padding: 0 24px;
+  text-shadow: 0 0 4px var(--bg), 0 0 14px var(--bg), 0 0 28px var(--bg);
 }
 .home-hero h1 {
   font-family: "Space Grotesk", system-ui, sans-serif;
-  font-size: clamp(2.2rem, 1.5rem + 2.8vw, 3.5rem);
+  font-size: clamp(2.4rem, 1.5rem + 3.6vw, 4.25rem);
   font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 1.08;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 .home-hero-lede {
-  font-size: 1.05rem;
-  line-height: 1.65;
+  font-size: 0.95rem;
+  line-height: 1.6;
   color: var(--text-soft);
-  margin: 20px 0 32px;
-  max-width: 56ch;
+  margin: 18px auto 0;
+  max-width: 42ch;
 }
-.home-hero-lede strong { color: var(--fg); font-weight: 600; }
-.btn-lg { padding: 1rem 2rem; font-size: 15px; }
 
-.home-cars { padding-bottom: 24px; }
-.home-cars h2 {
-  font-family: "Space Grotesk", system-ui, sans-serif;
-  font-size: 1.4rem;
+.home-hero-cta {
+  position: absolute;
+  z-index: 1;
+  bottom: clamp(20px, 4vh, 40px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
   font-weight: 500;
-  margin-bottom: 6px;
+  color: var(--muted-strong);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.home-hero-cta:hover { color: var(--accent-strong); }
+.home-hero-cta-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 22px rgba(32, 31, 28, 0.08);
+  animation: hero-cta-bob 2.6s ease-in-out infinite;
+}
+@keyframes hero-cta-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(5px); }
+}
+
+/* ---- Feature sections, revealed as they scroll into view ----------------- */
+.home-features {
+  display: grid;
+  gap: clamp(48px, 8vw, 96px);
+  max-width: 720px;
+  margin: 0 auto;
+  padding: clamp(72px, 12vh, 140px) 24px;
+}
+.feature { text-align: center; }
+.feature-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  color: var(--accent-strong);
+  margin-bottom: 20px;
+}
+.feature h2 {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.feature p {
+  margin-top: 12px;
+  color: var(--text-soft);
+  line-height: 1.65;
+  max-width: 48ch;
+  margin-inline: auto;
+}
+.feature strong { color: var(--fg); font-weight: 600; }
+
+.home-close {
+  text-align: center;
+  padding: 0 24px clamp(80px, 12vh, 140px);
+}
+.home-close h2 {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.1rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.home-close-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-top: 26px; }
+
+/* Elements fade and rise into place the first time they scroll into view. */
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out); }
+.reveal.is-visible { opacity: 1; transform: none; }
+
+@media (max-width: 720px) {
+  .home-hero { margin: -8px -20px 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { transition: opacity 0.2s linear; transform: none; opacity: 1; }
+  .home-hero-cta-icon { animation: none; }
 }

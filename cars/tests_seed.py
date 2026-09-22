@@ -3,7 +3,6 @@ import tempfile
 
 from django.core.management import call_command
 from django.test import TestCase, override_settings
-from django.urls import reverse
 
 from cars.models import Car, CustomizationOption
 
@@ -16,17 +15,6 @@ class FeaturedCarTests(TestCase):
         )
 
         self.assertEqual(list(Car.objects.all()), [featured, older])
-
-    def test_featured_car_is_listed_first_on_home(self):
-        Car.objects.create(name="Older", brand="Volt Motors", model_file="cars/models/older.glb")
-        featured = Car.objects.create(
-            name="Star", brand="Volt Motors", featured=True, model_file="cars/models/star.glb"
-        )
-
-        response = self.client.get(reverse("home"))
-
-        self.assertEqual(list(response.context["cars"])[0], featured)
-
 
 class SeedDemoCarsCommandTests(TestCase):
     def setUp(self):

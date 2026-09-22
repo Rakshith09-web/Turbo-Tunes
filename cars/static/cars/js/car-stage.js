@@ -7,7 +7,7 @@ import { createPalettePainter } from "./palette.js";
 // Used by the booking form (which swaps styles and colours as the customer chooses), by the
 // request page (one car in the colour that was booked) and by the All Cars showroom.
 // `distance` is how far the camera sits, as a multiple of the car's largest dimension.
-export function createCarStage(container, { distance: distanceFactor = 1.8 } = {}) {
+export function createCarStage(container, { distance: distanceFactor = 1.8, interactive = true, autoRotateSpeed = 1.6 } = {}) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(38, 4 / 3, 0.1, 100);
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -25,9 +25,12 @@ export function createCarStage(container, { distance: distanceFactor = 1.8 } = {
   controls.enableZoom = false;
   controls.enableDamping = true;
   controls.autoRotate = true;
-  controls.autoRotateSpeed = 1.6;
+  controls.autoRotateSpeed = autoRotateSpeed;
   controls.minPolarAngle = Math.PI * 0.22;
   controls.maxPolarAngle = Math.PI * 0.52;
+  // A purely ambient/background stage (e.g. the homepage hero) spins on its own and never
+  // takes pointer input, so clicks and drags pass straight through to whatever sits on top.
+  controls.enabled = interactive;
   // OrbitControls blocks all touch gestures; let vertical swipes keep scrolling the page.
   renderer.domElement.style.touchAction = "pan-y";
 

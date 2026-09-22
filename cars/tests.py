@@ -194,18 +194,44 @@ class HomeViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, f'href="{reverse("car_gallery")}"')
         self.assertContains(response, "My Garage")
+        self.assertContains(response, "service")
 
-    def test_home_previews_only_cars_that_have_a_3d_model(self):
-        car = Car.objects.create(name="Sedan", brand="AutoCraft", model_file="cars/models/sedan.glb")
+    def test_home_does_not_list_individual_cars_by_name(self):
+        Car.objects.create(name="Zephyr", brand="AutoCraft", model_file="cars/models/zephyr.glb")
+        Car.objects.create(name="Meridian", brand="AutoCraft", model_file="cars/models/meridian.glb")
+
+        response = self.client.get(reverse("home"))
+
+        self.assertNotContains(response, "Zephyr")
+        self.assertNotContains(response, "Meridian")
+
+    def test_home_uses_the_featured_car_to_drive_the_rotating_hero(self):
+        Car.objects.create(name="Older", brand="AutoCraft", model_file="cars/models/older.glb")
+        featured = Car.objects.create(
+            name="Star",
+            brand="AutoCraft",
+            featured=True,
+            model_file="cars/models/star.glb",
+            paint_mode=Car.PaintMode.PALETTE,
+            paint_region="1,2,3,4",
+        )
+
+        response = self.client.get(reverse("home"))
+
+        self.assertEqual(response.context["hero_car"], featured)
+        self.assertContains(response, "hero-car-data")
+        self.assertContains(response, '"paintMode": "palette"')
+
+    def test_home_ignores_cars_with_no_3d_model_for_the_hero(self):
         Car.objects.create(name="Placeholder", brand="AutoCraft")
 
         response = self.client.get(reverse("home"))
 
-        self.assertContains(response, "Sedan")
-        self.assertContains(response, f'href="{reverse("car_customizer", args=[car.pk])}"')
-        self.assertNotContains(response, "Placeholder")
+        self.assertIsNone(response.context["hero_car"])
+        self.assertNotContains(response, "hero-car-data")
 
-    def test_home_says_so_when_there_are_no_cars_yet(self):
+    def test_home_works_with_no_cars_yet(self):
         response = self.client.get(reverse("home"))
 
-        self.assertContains(response, "No cars yet")
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context["hero_car"])
