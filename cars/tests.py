@@ -59,22 +59,62 @@ class RealModelSupportTests(TestCase):
 
 
 class CarGalleryViewTests(TestCase):
-    def test_gallery_lists_all_cars(self):
-        Car.objects.create(name="Model S", brand="Volt Motors")
-        Car.objects.create(name="Ranger", brand="Trailblaze")
+    def make_car(self, name, **fields):
+        return Car.objects.create(name=name, brand="AutoCraft", model_file=f"cars/models/{name}.glb", **fields)
+
+    def test_gallery_shows_every_car_that_has_a_3d_model(self):
+        self.make_car("sedan")
+        self.make_car("suv")
+        Car.objects.create(name="Placeholder", brand="AutoCraft")
 
         response = self.client.get(reverse("car_gallery"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Model S")
-        self.assertContains(response, "Ranger")
+        self.assertEqual([entry["car"].name for entry in response.context["showroom"]], ["sedan", "suv"])
+        self.assertNotContains(response, "Placeholder")
 
-    def test_gallery_cards_link_to_each_cars_customizer(self):
-        car = Car.objects.create(name="Model S", brand="Volt Motors")
+    def test_each_car_links_to_its_customizer(self):
+        car = self.make_car("sedan")
 
         response = self.client.get(reverse("car_gallery"))
 
         self.assertContains(response, f'href="{reverse("car_customizer", args=[car.pk])}"')
+
+    def test_each_car_shows_its_description(self):
+        self.make_car("sedan", description="A balanced everyday four-door.", long_description="Room for the family.")
+
+        response = self.client.get(reverse("car_gallery"))
+
+        self.assertContains(response, "A balanced everyday four-door.")
+        self.assertContains(response, "Room for the family.")
+
+    def test_each_car_lists_what_can_be_customized(self):
+        car = self.make_car("sedan")
+        for label in ["Red", "Blue"]:
+            CustomizationOption.objects.create(car=car, option_type="paint", label=label, mesh_name="body", color_hex="#fff")
+        CustomizationOption.objects.create(car=car, option_type="wheels", label="Stock", mesh_name="wheel-")
+        CustomizationOption.objects.create(car=car, option_type="decal", label="None", mesh_name="body")
+
+        response = self.client.get(reverse("car_gallery"))
+
+        highlights = response.context["showroom"][0]["highlights"]
+        self.assertEqual(highlights, ["2 paint colours", "1 wheel design"])
+
+    def test_gallery_passes_3d_model_details_to_the_page(self):
+        car = self.make_car("sedan", paint_mode=Car.PaintMode.PALETTE, paint_region="384,128,64,128")
+
+        response = self.client.get(reverse("car_gallery"))
+
+        self.assertContains(response, "showroom-data")
+        data = response.context["showroom_data"]
+        self.assertEqual(data[0]["id"], car.pk)
+        self.assertEqual(data[0]["paintMode"], "palette")
+        self.assertTrue(data[0]["modelUrl"].endswith("sedan.glb"))
+
+    def test_gallery_says_so_when_there_are_no_cars(self):
+        response = self.client.get(reverse("car_gallery"))
+
+        self.assertContains(response, "No cars yet")
 
     def test_nav_links_to_the_gallery(self):
         response = self.client.get(reverse("car_gallery"))

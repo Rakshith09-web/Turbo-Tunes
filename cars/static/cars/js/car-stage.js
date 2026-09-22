@@ -1,12 +1,13 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { createPalettePainter } from "../../cars/js/palette.js";
+import { createPalettePainter } from "./palette.js";
 
-// A small turntable showing one car. `style` is { modelUrl, paintMode, paintRegion }.
-// Used by the booking form (which swaps styles and colours as the customer chooses) and by
-// the request page (which shows one car in the colour that was booked).
-export function createCarStage(container) {
+// A turntable showing one car. `style` is { modelUrl, paintMode, paintRegion }.
+// Used by the booking form (which swaps styles and colours as the customer chooses), by the
+// request page (one car in the colour that was booked) and by the All Cars showroom.
+// `distance` is how far the camera sits, as a multiple of the car's largest dimension.
+export function createCarStage(container, { distance: distanceFactor = 1.8 } = {}) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(38, 4 / 3, 0.1, 100);
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -27,6 +28,8 @@ export function createCarStage(container) {
   controls.autoRotateSpeed = 1.6;
   controls.minPolarAngle = Math.PI * 0.22;
   controls.maxPolarAngle = Math.PI * 0.52;
+  // OrbitControls blocks all touch gestures; let vertical swipes keep scrolling the page.
+  renderer.domElement.style.touchAction = "pan-y";
 
   let resumeSpin = null;
   controls.addEventListener("start", () => {
@@ -67,7 +70,7 @@ export function createCarStage(container) {
     const box = new THREE.Box3().setFromObject(model);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
-    const distance = Math.max(size.x, size.y, size.z) * 1.8;
+    const distance = Math.max(size.x, size.y, size.z) * distanceFactor;
     controls.target.copy(center);
     camera.position.set(center.x + distance * 0.72, center.y + distance * 0.34, center.z + distance * 0.78);
     camera.lookAt(center);

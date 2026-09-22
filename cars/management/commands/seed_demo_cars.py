@@ -11,15 +11,20 @@ ASSETS = Path(__file__).resolve().parents[2] / "seed_assets"
 # paint_region is the x,y,width,height (in texture pixels) of each body's paint swatch.
 CARS = [
     {"name": "Sedan", "thumb": "sedan.png", "file": "sedan.glb", "paint_region": "384,128,64,128", "featured": True,
-     "description": "A balanced everyday four-door."},
+     "description": "A balanced everyday four-door.",
+     "long_description": "Four doors, a proper boot and a calm, upright shape. It is the easy everyday pick, and a clean canvas for paint, wheels and stripes."},
     {"name": "Sports Sedan", "thumb": "sports-sedan.png", "file": "sedan-sports.glb", "paint_region": "384,128,64,128",
-     "description": "A sportier sedan with a rear spoiler."},
+     "description": "A sportier sedan with a rear spoiler.",
+     "long_description": "The same everyday four-door shape, sharpened with a rear spoiler. Add a bold colour, racing wheels and stripes and it is ready for the weekend."},
     {"name": "SUV", "thumb": "suv.png", "file": "suv.glb", "paint_region": "192,128,64,128",
-     "description": "Tall, roomy and ready for anything."},
+     "description": "Tall, roomy and ready for anything.",
+     "long_description": "A tall, boxy body with the spare wheel mounted on the back. Rugged by design, so try dark alloy wheels with a deep green or graphite finish."},
     {"name": "Sports Hatchback", "thumb": "sports-hatchback.png", "file": "hatchback-sports.glb", "paint_region": "192,128,64,128",
-     "description": "A compact hot hatch."},
+     "description": "A compact hot hatch.",
+     "long_description": "Compact and easy to park, with sporty lines and a short tail. It is the playful one in the lineup, and bright paint with racing wheels suits it well."},
     {"name": "Future Racer", "thumb": "future-racer.png", "file": "race-future.glb", "paint_region": "448,128,64,128",
-     "description": "A low, wide track machine."},
+     "description": "A low, wide track machine.",
+     "long_description": "An open-wheel racer built for the track, with wings at both ends. It is the most dramatic car here: pick a loud colour, add stripes and fit dual exhaust tips."},
 ]
 
 PAINTS = [
@@ -65,6 +70,7 @@ class Command(BaseCommand):
                 brand="AutoCraft", name=spec["name"], defaults={"description": spec["description"]}
             )
             car.description = spec["description"]
+            car.long_description = spec["long_description"]
             car.paint_mode = Car.PaintMode.PALETTE
             car.paint_region = spec["paint_region"]
             car.featured = spec.get("featured", False)

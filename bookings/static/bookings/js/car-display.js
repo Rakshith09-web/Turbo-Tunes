@@ -1,4 +1,4 @@
-import { createCarStage } from "./car-stage.js";
+import { createCarStage } from "../../cars/js/car-stage.js";
 
 const data = JSON.parse(document.getElementById("car-display-data").textContent);
 const stage = createCarStage(document.getElementById("car-preview"));

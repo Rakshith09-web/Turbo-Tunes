@@ -35,6 +35,7 @@ class SeedDemoCarsCommandTests(TestCase):
         self.assertEqual(sedan.paint_mode, Car.PaintMode.PALETTE)
         self.assertTrue(sedan.paint_region)
         self.assertTrue(sedan.featured)
+        self.assertTrue(all(car.long_description for car in Car.objects.filter(brand="AutoCraft")))
         self.assertTrue(sedan.thumbnail.name.endswith(".png"))
         self.assertTrue(all(car.thumbnail for car in Car.objects.filter(brand="AutoCraft")))
         types = set(sedan.options.values_list("option_type", flat=True))

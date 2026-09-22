@@ -8,7 +8,8 @@ class Car(models.Model):
 
     name = models.CharField(max_length=100)
     brand = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, help_text="One line, shown as the lead sentence.")
+    long_description = models.TextField(blank=True, help_text="A short paragraph shown on the All Cars page.")
     thumbnail = models.ImageField(upload_to="cars/thumbnails/", blank=True, null=True)
     model_file = models.FileField(
         upload_to="cars/models/",
