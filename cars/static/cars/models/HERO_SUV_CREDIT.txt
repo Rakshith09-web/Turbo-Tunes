@@ -1,0 +1,26 @@
+Model Information:
+* title:        MMC Generic Small SUV Car
+* source:       https://sketchfab.com/3d-models/mmc-generic-small-suv-car-5db696c6ed5d4bdc87905c1040fa072a
+* author:       MMC Works (https://sketchfab.com/mmcworks)
+
+Model License:
+* license type: CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements: Author must be credited. Commercial use is allowed.
+
+Credit (kept verbatim per the license terms):
+This work is based on "MMC Generic Small SUV Car"
+(https://sketchfab.com/3d-models/mmc-generic-small-suv-car-5db696c6ed5d4bdc87905c1040fa072a)
+by MMC Works (https://sketchfab.com/mmcworks) licensed under CC-BY-4.0
+(http://creativecommons.org/licenses/by/4.0/)
+
+---
+
+Used only as the homepage hero's rotating background watermark — not part of the customizable
+car catalog (see cars/seed_assets/README.md for those). hero-suv.glb is a re-export of the
+original download, processed with glTF-Transform (https://gltf-transform.dev) to fit a
+background element's weight budget:
+- textures downscaled to 512px and re-encoded as WebP
+- geometry simplified to ~35% of the original vertex count
+- unused nodes/materials pruned, draw calls joined
+
+Original download was ~50 MB (glTF + separate textures); this file is ~3.5 MB.

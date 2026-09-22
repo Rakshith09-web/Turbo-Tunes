@@ -1,10 +1,18 @@
 from collections import Counter
 
+from django.contrib.staticfiles import finders
 from django.shortcuts import get_object_or_404, render
+from django.templatetags.static import static
 from django.urls import reverse
 
 from cars.models import Car
 from garage.models import SavedBuild
+
+# A realistic, unbranded SUV shown purely as decoration on the homepage — spinning behind the
+# title as a watermark. It has no relation to the customizable catalog (no palette paint, no
+# swappable parts), so it lives as a static asset rather than a Car row. See
+# cars/static/cars/models/HERO_SUV_CREDIT.txt for the model's CC-BY attribution.
+HERO_WATERMARK_PATH = "cars/models/hero-suv.glb"
 
 HIGHLIGHT_ORDER = ["paint", "wheels", "exhaust", "interior", "decal"]
 HIGHLIGHT_NOUNS = {
@@ -32,15 +40,11 @@ def option_highlights(car):
 
 
 def home(request):
-    hero_car = Car.objects.exclude(model_file="").exclude(model_file=None).first()
     hero_data = None
-    if hero_car:
-        hero_data = {
-            "modelUrl": hero_car.model_file.url,
-            "paintMode": hero_car.paint_mode,
-            "paintRegion": hero_car.paint_region,
-        }
-    return render(request, "cars/home.html", {"hero_car": hero_car, "hero_data": hero_data})
+    if finders.find(HERO_WATERMARK_PATH):
+        # Not palette-painted — it keeps its own real-world materials, so no paintRegion applies.
+        hero_data = {"modelUrl": static(HERO_WATERMARK_PATH), "paintMode": "none", "paintRegion": ""}
+    return render(request, "cars/home.html", {"hero_data": hero_data})
 
 
 def car_gallery(request):

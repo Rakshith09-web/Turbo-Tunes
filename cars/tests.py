@@ -211,33 +211,19 @@ class HomeViewTests(TestCase):
         self.assertNotContains(response, "Zephyr")
         self.assertNotContains(response, "Meridian")
 
-    def test_home_uses_the_featured_car_to_drive_the_rotating_hero(self):
-        Car.objects.create(name="Older", brand="AutoCraft", model_file="cars/models/older.glb")
-        featured = Car.objects.create(
-            name="Star",
-            brand="AutoCraft",
-            featured=True,
-            model_file="cars/models/star.glb",
-            paint_mode=Car.PaintMode.PALETTE,
-            paint_region="1,2,3,4",
-        )
-
-        response = self.client.get(reverse("home"))
-
-        self.assertEqual(response.context["hero_car"], featured)
-        self.assertContains(response, "hero-car-data")
-        self.assertContains(response, '"paintMode": "palette"')
-
-    def test_home_ignores_cars_with_no_3d_model_for_the_hero(self):
+    def test_home_hero_is_a_fixed_watermark_independent_of_the_catalog(self):
+        # The rotating hero is decoration, not a catalog pick — it shows the same watermark
+        # model whether the catalog is empty, full, or missing 3D files entirely.
+        Car.objects.create(name="Zephyr", brand="AutoCraft", model_file="cars/models/zephyr.glb")
         Car.objects.create(name="Placeholder", brand="AutoCraft")
 
         response = self.client.get(reverse("home"))
 
-        self.assertIsNone(response.context["hero_car"])
-        self.assertNotContains(response, "hero-car-data")
+        self.assertContains(response, "hero-car-data")
+        self.assertContains(response, "hero-suv")
 
     def test_home_works_with_no_cars_yet(self):
         response = self.client.get(reverse("home"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertIsNone(response.context["hero_car"])
+        self.assertContains(response, "hero-car-data")
