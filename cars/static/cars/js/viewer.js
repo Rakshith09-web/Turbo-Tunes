@@ -433,6 +433,50 @@ function applyExhaust(option) {
   return true;
 }
 
+// ---- Spoiler -----------------------------------------------------------------------------
+// Built in code from the car's own bounding box, same idea as the exhaust generator — this
+// works on every car regardless of whether its model has a spoiler of its own (most don't:
+// on these scanned cars, a real spoiler is either fused into the body as one continuous
+// surface with no separate part to target, or, like the sedan, isn't modelled at all).
+function buildSpoiler(hex) {
+  const box = new THREE.Box3().setFromObject(carRoot);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+
+  const group = new THREE.Group();
+  group.name = "GeneratedSpoiler";
+  const material = new THREE.MeshStandardMaterial({ color: hex, metalness: 0.5, roughness: 0.3 });
+
+  const wingWidth = size.x * 0.76;
+  const wingDepth = size.z * 0.09;
+  const wingThickness = size.y * 0.03;
+  const strutHeight = size.y * 0.15;
+  const strutWidth = size.x * 0.025;
+
+  const wingZ = box.min.z + size.z * 0.05; // near the rear
+  const wingY = box.max.y + strutHeight;
+
+  const wing = new THREE.Mesh(new THREE.BoxGeometry(wingWidth, wingThickness, wingDepth), material);
+  wing.position.set(center.x, wingY, wingZ);
+  group.add(wing);
+
+  const strutGeometry = new THREE.BoxGeometry(strutWidth, strutHeight, wingDepth * 0.55);
+  [-1, 1].forEach((side) => {
+    const strut = new THREE.Mesh(strutGeometry, material);
+    strut.position.set(center.x + side * wingWidth * 0.36, box.max.y + strutHeight / 2, wingZ);
+    group.add(strut);
+  });
+
+  return group;
+}
+
+function applySpoiler(option) {
+  const existing = carRoot.getObjectByName("GeneratedSpoiler");
+  if (existing) carRoot.remove(existing);
+  if (option.color_hex) carRoot.add(buildSpoiler(option.color_hex));
+  return true;
+}
+
 // ---- Decals ------------------------------------------------------------------------------
 // Decals are projected onto the body from above, so they follow its shape whatever its UVs.
 let decalMesh = null;
@@ -503,6 +547,7 @@ async function applyOption(option) {
   else if (option.option_type === "decal") applied = await applyDecal(option);
   else if (option.option_type === "wheels") applied = await applyWheels(option);
   else if (option.option_type === "exhaust") applied = applyExhaust(option);
+  else if (option.option_type === "spoiler") applied = applySpoiler(option);
   if (!applied) return;
 
   selectedOptionIds.add(option.id);
@@ -526,6 +571,7 @@ const CATEGORY_LABELS = {
   interior: "Interior",
   exhaust: "Exhaust",
   decal: "Decals",
+  spoiler: "Spoiler",
 };
 
 // Stroke-based, 17px, one consistent style — matches the icon set used in the draft mockup.
@@ -540,6 +586,8 @@ const CATEGORY_ICONS = {
     '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10 L14 10 C16.5 10 18 12 18 14 L18 15"/><circle cx="19.5" cy="15" r="2.3"/></svg>',
   decal:
     '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 4 L9 20 M13 4 L13 20"/></svg>',
+  spoiler:
+    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8 L20 8 M7 8 L7 13 M17 8 L17 13 M7 13 L17 13"/></svg>',
 };
 
 let activeCategory = null;
@@ -589,10 +637,12 @@ function renderSwatchRow() {
 
   const type = activeCategory;
   const options = optionsByType[type] || [];
-  // Wheels are swatches when they're colour options (these cars) and pills when they're named
-  // styles/shapes (older Kenney-style cars with a part_file swap) — decided by what's seeded.
+  // Wheels/spoiler are swatches when they're colour options (these cars) and pills when
+  // they're named styles/shapes (older Kenney-style cars with a part_file swap) — decided by
+  // what's seeded. A spoiler's "None" choice has no colour (it removes the part), so at least
+  // one colour among the options is enough to treat the whole row as swatches.
   const isColorType =
-    type === "paint" || type === "interior" || (options.length > 0 && options.every((o) => o.color_hex));
+    type === "paint" || type === "interior" || (options.length > 0 && options.some((o) => o.color_hex));
 
   const label = document.createElement("span");
   label.className = "swatch-row-label";
@@ -605,7 +655,11 @@ function renderSwatchRow() {
     el.title = option.label;
     if (isColorType) {
       el.className = "swatch";
-      el.style.backgroundColor = option.color_hex;
+      if (option.color_hex) {
+        el.style.backgroundColor = option.color_hex;
+      } else {
+        el.classList.add("swatch-none"); // e.g. spoiler "None" — an empty ring, not a fill
+      }
     } else {
       el.className = "option-pill";
       el.textContent = option.label;

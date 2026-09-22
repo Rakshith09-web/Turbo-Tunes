@@ -17,6 +17,7 @@ CARS = [
     {"name": "Sedan", "thumb": "sedan.png", "file": "sedan.glb", "featured": True,
      "paint_mesh": "bPaint_Geo_lodA_Paint_Geo_lodA_BMW_M5SedanRewardRecycled_2024Paint_Material_bBMW_M5SedanRewardRecycled_2024Paint_Material1_0",
      "wheel_mesh": "polySurface148_bBMW_M5SedanRewardRecycled_2024_Wheel1A_3D_3DWheel2A_Material1_0",
+     "spoiler": True,
      "description": "A balanced everyday four-door.",
      "long_description": "Four doors, a proper boot and a calm, upright shape. It is the easy everyday pick, and a clean canvas for paint."},
     {"name": "Sports Sedan", "thumb": "sports-sedan.png", "file": "sedan-sports.glb",
@@ -27,6 +28,7 @@ CARS = [
          "porscheporschepolySurface457_porschePorsche_TaycanTurboGTReward_2025_Wheel1A_3D_3DWheel1A_Material1_0,"
          "porscheporschepolySurface689_porschePorsche_TaycanTurboGTReward_2025_Wheel1A_3D_3DWheel1A_Material1_0"
      ),
+     "spoiler": True,
      "description": "A sportier sedan-coupe with serious performance.",
      "long_description": "Low, wide and built for speed, with a fixed rear wing. Add a bold colour and dual exhaust tips and it is ready for the weekend."},
     {"name": "SUV", "thumb": "suv.png", "file": "suv.glb",
@@ -35,18 +37,23 @@ CARS = [
      # model), so "wheel colour" here tints brakes along with the rims — a small trade-off,
      # not worth reprocessing for.
      "wheel_mesh": "brake-caliper-fl_wheels-brakes_0",
+     "spoiler": False,
      "description": "Tall, roomy and ready for anything.",
      "long_description": "A tall, rugged body built for comfort over rough roads. Try a deep green or graphite finish."},
     {"name": "Sports Hatchback", "thumb": "sports-hatchback.png", "file": "hatchback-sports.glb",
      "paint_mesh": "A45SK_Hood_101_SK_Hood_101_MI_1236020001_004_A45MI_1236020001_002_0",
      "wheel_mesh": "A45Ani_Wheel_BR112_A45MI_ChangeA_Rim1_0",
+     "spoiler": True,
      "description": "A compact hot hatch.",
      "long_description": "Compact and easy to park, with sporty lines and a roof spoiler. It is the playful one in the lineup, and bright paint suits it well."},
     {"name": "Future Racer", "thumb": "future-racer.png", "file": "race-future.glb",
      "paint_mesh": "Object_4",
-     # No wheel_mesh: this model has no separate wheel geometry at all, even in the raw,
+     # No wheel_mesh: this model has no separate wheel geometry at all, even in the raw
      # unprocessed download — it's one fused surface, so there's nothing to target separately.
      "wheel_mesh": None,
+     # Already has its own built-in rear wing as part of the model — a generated one on top
+     # would look redundant.
+     "spoiler": False,
      "description": "A low, wide open-wheel track machine.",
      "long_description": "An open-wheel racer built for the track, with wings at both ends. It is the most dramatic car here: pick a loud colour and fit dual exhaust tips."},
 ]
@@ -84,6 +91,17 @@ DECALS = [
     ("Racing Stripes", "racing_stripes.png"),
 ]
 
+# Built in code from the car's own bounding box (see viewer.js buildSpoiler), the same way
+# exhaust tips are — none of these cars have a real, separately-targetable spoiler part: it's
+# either fused into the body as one continuous surface (no separate mesh to grab), or, on the
+# sedan, not modelled at all. "None" (no colour) removes it.
+SPOILER_COLORS = [
+    ("None", None),
+    ("Gloss Black", "#17181A"),
+    ("Carbon", "#33363A"),
+    ("Body Match", "#3A3B40"),
+]
+
 
 def attach(field_file, path):
     if field_file and field_file.storage.exists(field_file.name):
@@ -110,16 +128,17 @@ class Command(BaseCommand):
             attach(car.model_file, ASSETS / "models" / spec["file"])
             attach(car.thumbnail, ASSETS / "thumbnails" / spec["thumb"])
             car.save()
-            # Wheels only get seeded when the car actually has separate wheel geometry — drop
-            # any left over from an older seeding (or an older run before a wheel_mesh was
-            # found) so a car without one doesn't show a broken Wheels tab.
+            # Wheels/spoiler only get seeded when the car actually supports them — drop any
+            # left over from an older seeding so a car without one doesn't show a broken tab.
             if not spec["wheel_mesh"]:
                 car.options.filter(option_type="wheels").delete()
-            self.seed_options(car, spec["paint_mesh"], spec["wheel_mesh"])
+            if not spec["spoiler"]:
+                car.options.filter(option_type="spoiler").delete()
+            self.seed_options(car, spec["paint_mesh"], spec["wheel_mesh"], spec["spoiler"])
             if options["verbosity"]:
                 self.stdout.write(f"Seeded {car}")
 
-    def seed_options(self, car, paint_mesh, wheel_mesh):
+    def seed_options(self, car, paint_mesh, wheel_mesh, has_spoiler):
         # Every paint swatch targets the same mesh, at a different colour.
         for label, hex_value in PAINTS:
             self.option(car, "paint", label, paint_mesh, color_hex=hex_value)
@@ -138,6 +157,10 @@ class Command(BaseCommand):
                 decal.save()
             elif decal.texture_file:
                 decal.texture_file.delete(save=True)
+
+        if has_spoiler:
+            for label, hex_value in SPOILER_COLORS:
+                self.option(car, "spoiler", label, "generated:spoiler", color_hex=hex_value or "")
 
     def option(self, car, option_type, label, mesh_name, **fields):
         option, _ = CustomizationOption.objects.update_or_create(

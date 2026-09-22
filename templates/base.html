@@ -19,13 +19,17 @@
       {% if user.is_authenticated %}
         <a href="{% url 'my_garage' %}">My Garage</a>
         <a href="{% url 'my_requests' %}">My Requests</a>
+      {% endif %}
+    </div>
+    <div class="nav-auth">
+      {% if user.is_authenticated %}
         <form action="{% url 'logout' %}" method="post" class="logout-form">
           {% csrf_token %}
-          <button type="submit">Log out</button>
+          <button type="submit" class="btn-nav btn-nav-dark">Log out</button>
         </form>
       {% else %}
-        <a href="{% url 'login' %}">Log in</a>
-        <a href="{% url 'register' %}">Register</a>
+        <a href="{% url 'login' %}" class="btn-nav btn-nav-dark">Log in</a>
+        <a href="{% url 'register' %}" class="btn-nav btn-nav-light">Register</a>
       {% endif %}
     </div>
   </nav>

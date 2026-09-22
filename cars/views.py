@@ -14,11 +14,12 @@ from garage.models import SavedBuild
 # cars/static/cars/models/HERO_SUV_CREDIT.txt for the model's CC-BY attribution.
 HERO_WATERMARK_PATH = "cars/models/hero-suv.glb"
 
-HIGHLIGHT_ORDER = ["paint", "wheels", "exhaust", "interior", "decal"]
+HIGHLIGHT_ORDER = ["paint", "wheels", "exhaust", "spoiler", "interior", "decal"]
 HIGHLIGHT_NOUNS = {
     "paint": ("paint colour", "paint colours"),
     "wheels": ("wheel finish", "wheel finishes"),
     "exhaust": ("exhaust style", "exhaust styles"),
+    "spoiler": ("spoiler finish", "spoiler finishes"),
     "interior": ("interior colour", "interior colours"),
     "decal": ("decal", "decals"),
 }
@@ -30,6 +31,8 @@ def option_highlights(car):
     for option in car.options.all():
         if option.option_type == "decal" and not option.texture_file:
             continue  # the "None" choice, not a decal
+        if option.option_type == "spoiler" and not option.color_hex:
+            continue  # the "None" choice, not a spoiler finish
         counts[option.option_type] += 1
     phrases = []
     for kind in HIGHLIGHT_ORDER:

@@ -97,6 +97,20 @@
   border: 2px solid transparent;
   cursor: pointer;
 }
+/* A colour row's "remove this part" choice (e.g. spoiler "None") — an empty ring instead of
+   a fill, so it reads as "nothing" rather than as one more colour to pick. */
+.swatch-none {
+  background: var(--card-bg);
+  border: 2px dashed var(--border);
+  position: relative;
+}
+.swatch-none::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-top: 1.5px solid var(--muted-strong);
+  transform: rotate(-45deg);
+}
 .swatch.selected {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--card-bg), 0 0 0 3px var(--accent);

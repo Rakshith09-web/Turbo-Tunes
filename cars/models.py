@@ -47,6 +47,7 @@ class CustomizationOption(models.Model):
         DECAL = "decal", "Decal"
         INTERIOR = "interior", "Interior Colour"
         EXHAUST = "exhaust", "Exhaust"
+        SPOILER = "spoiler", "Spoiler"
 
     car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="options")
     option_type = models.CharField(max_length=20, choices=OptionType.choices)
@@ -56,7 +57,7 @@ class CustomizationOption(models.Model):
         help_text="Exact mesh/object name inside the car's .glb file that this option targets.",
     )
     color_hex = models.CharField(
-        max_length=7, blank=True, help_text="Used for paint/interior options, e.g. #CC0000"
+        max_length=7, blank=True, help_text="Used for paint/interior/wheels/spoiler options, e.g. #CC0000"
     )
     texture_file = models.ImageField(
         upload_to="cars/textures/", blank=True, null=True, help_text="Used for decal options."

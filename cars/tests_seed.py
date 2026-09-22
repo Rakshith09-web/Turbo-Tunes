@@ -37,7 +37,7 @@ class SeedDemoCarsCommandTests(TestCase):
         self.assertTrue(sedan.thumbnail.name.endswith(".png"))
         self.assertTrue(all(car.thumbnail for car in Car.objects.filter(brand="AutoCraft")))
         types = set(sedan.options.values_list("option_type", flat=True))
-        self.assertEqual(types, {"paint", "wheels", "exhaust", "decal"})
+        self.assertEqual(types, {"paint", "wheels", "exhaust", "decal", "spoiler"})
 
     def test_paint_options_all_target_the_cars_own_paint_mesh(self):
         call_command("seed_demo_cars", verbosity=0)
@@ -68,6 +68,22 @@ class SeedDemoCarsCommandTests(TestCase):
         self.assertEqual(decals.count(), 2)
         self.assertTrue(any(d.texture_file for d in decals))
         self.assertTrue(any(not d.texture_file for d in decals))
+
+    def test_spoiler_options_are_generated_with_a_none_choice(self):
+        call_command("seed_demo_cars", verbosity=0)
+
+        spoilers = Car.objects.get(name="Sedan").options.filter(option_type="spoiler")
+        self.assertGreaterEqual(spoilers.count(), 2)
+        self.assertTrue(all(s.mesh_name == "generated:spoiler" for s in spoilers))
+        self.assertTrue(any(s.color_hex for s in spoilers))
+        self.assertTrue(any(not s.color_hex for s in spoilers))
+
+    def test_suv_and_future_racer_have_no_spoiler_options(self):
+        call_command("seed_demo_cars", verbosity=0)
+
+        for name in ["SUV", "Future Racer"]:
+            car = Car.objects.get(name=name)
+            self.assertFalse(car.options.filter(option_type="spoiler").exists())
 
     def test_reseeding_replaces_a_stale_model_file(self):
         call_command("seed_demo_cars", verbosity=0)
