@@ -1,0 +1,99 @@
+Attribution for the five demo car models (cars/seed_assets/models/). See README.md for the
+full licensing picture — three of these are non-commercial only, and the fifth carries real
+sponsor trademarks not covered by its CC license.
+
+================================================================================================
+Sedan — sedan.glb
+================================================================================================
+Model Information:
+* title:        2025 BMW M5 Sedan
+* source:       https://sketchfab.com/3d-models/2025-bmw-m5-sedan-4ab34c43bada482b8e467be97ebaeba3
+* author:       Ddiaz Design (https://sketchfab.com/ddiaz-design)
+
+License:        CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+Requirements:   Author must be credited. No commercial use. Modified versions must carry the
+                same license.
+
+Credit:
+This work is based on "2025 BMW M5 Sedan"
+(https://sketchfab.com/3d-models/2025-bmw-m5-sedan-4ab34c43bada482b8e467be97ebaeba3)
+by Ddiaz Design (https://sketchfab.com/ddiaz-design) licensed under CC-BY-NC-SA-4.0
+(http://creativecommons.org/licenses/by-nc-sa/4.0/)
+
+================================================================================================
+Sports Sedan — sedan-sports.glb
+================================================================================================
+Model Information:
+* title:        2025 Porsche Taycan Turbo GT Weissach Package
+* source:       https://sketchfab.com/3d-models/2025-porsche-taycan-turbo-gt-weissach-package-4e1abafe7cf5413587a421377624ba08
+* author:       Ddiaz Design (https://sketchfab.com/ddiaz-design)
+
+License:        CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+Requirements:   Author must be credited. No commercial use. Modified versions must carry the
+                same license.
+
+Credit:
+This work is based on "2025 Porsche Taycan Turbo GT Weissach Package"
+(https://sketchfab.com/3d-models/2025-porsche-taycan-turbo-gt-weissach-package-4e1abafe7cf5413587a421377624ba08)
+by Ddiaz Design (https://sketchfab.com/ddiaz-design) licensed under CC-BY-NC-SA-4.0
+(http://creativecommons.org/licenses/by-nc-sa/4.0/)
+
+================================================================================================
+SUV — suv.glb  (the only one of these five cleared for commercial use)
+================================================================================================
+Model Information:
+* title:        MMC Generic Small SUV Car
+* source:       https://sketchfab.com/3d-models/mmc-generic-small-suv-car-5db696c6ed5d4bdc87905c1040fa072a
+* author:       MMC Works (https://sketchfab.com/mmcworks)
+
+License:        CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+Requirements:   Author must be credited. Commercial use is allowed.
+
+Credit:
+This work is based on "MMC Generic Small SUV Car"
+(https://sketchfab.com/3d-models/mmc-generic-small-suv-car-5db696c6ed5d4bdc87905c1040fa072a)
+by MMC Works (https://sketchfab.com/mmcworks) licensed under CC-BY-4.0
+(http://creativecommons.org/licenses/by/4.0/)
+
+Note: this is the same model used (separately optimized) as the homepage hero watermark — see
+cars/static/cars/models/HERO_SUV_CREDIT.txt.
+
+================================================================================================
+Sports Hatchback — hatchback-sports.glb
+================================================================================================
+Model Information:
+* title:        2023 Mercedes-Benz A45 S AMG 4Matic
+* source:       https://sketchfab.com/3d-models/2023-mercedes-benz-a45-s-amg-4matic-7dcef373c52c44ffb0bfbd85a1da1ed2
+* author:       Ddiaz Design (https://sketchfab.com/ddiaz-design)
+
+License:        CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+Requirements:   Author must be credited. No commercial use. Modified versions must carry the
+                same license.
+
+Credit:
+This work is based on "2023 Mercedes-Benz A45 S AMG 4Matic"
+(https://sketchfab.com/3d-models/2023-mercedes-benz-a45-s-amg-4matic-7dcef373c52c44ffb0bfbd85a1da1ed2)
+by Ddiaz Design (https://sketchfab.com/ddiaz-design) licensed under CC-BY-NC-SA-4.0
+(http://creativecommons.org/licenses/by-nc-sa/4.0/)
+
+================================================================================================
+Future Racer — race-future.glb
+================================================================================================
+Model Information:
+* title:        Aston Martin F1 AMR23 2023
+* source:       https://sketchfab.com/3d-models/aston-martin-f1-amr23-2023-f6ba825a43b146a9b669934a4e1fd529
+* author:       Redgrund (https://sketchfab.com/redgrund)
+
+License:        CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/) — for the 3D scan only.
+Requirements:   Author must be credited. Commercial use of the scan is allowed by this license,
+                BUT the livery baked into its paint texture carries real, current sponsor
+                trademarks (Aramco, Cognizant, Pirelli, TeamViewer, Bombardier, Lenovo, and
+                others) and Aston Martin's own branding. The uploader's CC license only covers
+                their copyright in the 3D model/scan — it grants no rights to those marks.
+                Treat this one as NOT cleared for any public or commercial use as-is.
+
+Credit:
+This work is based on "Aston Martin F1 AMR23 2023"
+(https://sketchfab.com/3d-models/aston-martin-f1-amr23-2023-f6ba825a43b146a9b669934a4e1fd529)
+by Redgrund (https://sketchfab.com/redgrund) licensed under CC-BY-4.0
+(http://creativecommons.org/licenses/by/4.0/)

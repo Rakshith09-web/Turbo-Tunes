@@ -7,24 +7,31 @@ from cars.models import Car, CustomizationOption
 
 ASSETS = Path(__file__).resolve().parents[2] / "seed_assets"
 
-# The Kenney Car Kit (CC0) models colour themselves from one shared palette image.
-# paint_region is the x,y,width,height (in texture pixels) of each body's paint swatch.
+# These are realistic scanned/modeled cars (see cars/seed_assets/README.md for sourcing and
+# licensing of each). Unlike the old Kenney set, each model colours itself with its own baked
+# materials, so "paint" directly tints one named mesh instead of recoloring a shared palette
+# image — paint_mesh is that mesh's exact name inside the .glb, found by trial rendering.
 CARS = [
-    {"name": "Sedan", "thumb": "sedan.png", "file": "sedan.glb", "paint_region": "384,128,64,128", "featured": True,
+    {"name": "Sedan", "thumb": "sedan.png", "file": "sedan.glb", "featured": True,
+     "paint_mesh": "bPaint_Geo_lodA_Paint_Geo_lodA_BMW_M5SedanRewardRecycled_2024Paint_Material_bBMW_M5SedanRewardRecycled_2024Paint_Material1_0",
      "description": "A balanced everyday four-door.",
-     "long_description": "Four doors, a proper boot and a calm, upright shape. It is the easy everyday pick, and a clean canvas for paint, wheels and stripes."},
-    {"name": "Sports Sedan", "thumb": "sports-sedan.png", "file": "sedan-sports.glb", "paint_region": "384,128,64,128",
-     "description": "A sportier sedan with a rear spoiler.",
-     "long_description": "The same everyday four-door shape, sharpened with a rear spoiler. Add a bold colour, racing wheels and stripes and it is ready for the weekend."},
-    {"name": "SUV", "thumb": "suv.png", "file": "suv.glb", "paint_region": "192,128,64,128",
+     "long_description": "Four doors, a proper boot and a calm, upright shape. It is the easy everyday pick, and a clean canvas for paint."},
+    {"name": "Sports Sedan", "thumb": "sports-sedan.png", "file": "sedan-sports.glb",
+     "paint_mesh": "porschePaint_Geo_lodA_Paint_Geo_lodA_Porsche_TaycanTurboGTReward_2025Paint_Material_porschePorsche_TaycanTurboGTReward_2025Paint_Material1_0",
+     "description": "A sportier sedan-coupe with serious performance.",
+     "long_description": "Low, wide and built for speed, with a fixed rear wing. Add a bold colour and dual exhaust tips and it is ready for the weekend."},
+    {"name": "SUV", "thumb": "suv.png", "file": "suv.glb",
+     "paint_mesh": "fender-front-arch-right_body_0",
      "description": "Tall, roomy and ready for anything.",
-     "long_description": "A tall, boxy body with the spare wheel mounted on the back. Rugged by design, so try dark alloy wheels with a deep green or graphite finish."},
-    {"name": "Sports Hatchback", "thumb": "sports-hatchback.png", "file": "hatchback-sports.glb", "paint_region": "192,128,64,128",
+     "long_description": "A tall, rugged body built for comfort over rough roads. Try a deep green or graphite finish."},
+    {"name": "Sports Hatchback", "thumb": "sports-hatchback.png", "file": "hatchback-sports.glb",
+     "paint_mesh": "A45SK_Hood_101_SK_Hood_101_MI_1236020001_004_A45MI_1236020001_002_0",
      "description": "A compact hot hatch.",
-     "long_description": "Compact and easy to park, with sporty lines and a short tail. It is the playful one in the lineup, and bright paint with racing wheels suits it well."},
-    {"name": "Future Racer", "thumb": "future-racer.png", "file": "race-future.glb", "paint_region": "448,128,64,128",
-     "description": "A low, wide track machine.",
-     "long_description": "An open-wheel racer built for the track, with wings at both ends. It is the most dramatic car here: pick a loud colour, add stripes and fit dual exhaust tips."},
+     "long_description": "Compact and easy to park, with sporty lines and a roof spoiler. It is the playful one in the lineup, and bright paint suits it well."},
+    {"name": "Future Racer", "thumb": "future-racer.png", "file": "race-future.glb",
+     "paint_mesh": "Object_4",
+     "description": "A low, wide open-wheel track machine.",
+     "long_description": "An open-wheel racer built for the track, with wings at both ends. It is the most dramatic car here: pick a loud colour and fit dual exhaust tips."},
 ]
 
 PAINTS = [
@@ -36,15 +43,9 @@ PAINTS = [
     ("Graphite", "#3A3B40"),
 ]
 
-# (label, mesh_name, part file). "wheel-" targets the four side wheels; no part file means
-# the car's own stock wheels.
-WHEELS = [
-    ("Stock", "wheel-", None),
-    ("Dark Alloy", "wheel-", "wheel-dark.glb"),
-    ("Racing", "wheel-", "wheel-racing.glb"),
-]
-
-# "generated:" options are built in code, since these models have no exhaust parts.
+# "generated:" options are built in code from the car's own bounding box, so they work
+# regardless of what the underlying model looks like — these realistic cars have no exhaust
+# parts of their own, same as the old Kenney set.
 EXHAUSTS = [
     ("Stock", "generated:none"),
     ("Single Tip", "generated:single"),
@@ -62,7 +63,7 @@ def attach(field_file, path):
 
 
 class Command(BaseCommand):
-    help = "Load the demo cars (free CC0 Kenney Car Kit models) and their customization options."
+    help = "Load the demo cars (realistic scanned models) and their customization options."
 
     def handle(self, *args, **options):
         for spec in CARS:
@@ -71,33 +72,29 @@ class Command(BaseCommand):
             )
             car.description = spec["description"]
             car.long_description = spec["long_description"]
-            car.paint_mode = Car.PaintMode.PALETTE
-            car.paint_region = spec["paint_region"]
+            car.paint_mode = Car.PaintMode.TINT
+            car.paint_region = ""
             car.featured = spec.get("featured", False)
             attach(car.model_file, ASSETS / "models" / spec["file"])
             attach(car.thumbnail, ASSETS / "thumbnails" / spec["thumb"])
             car.save()
-            self.seed_options(car)
+            # Drop any wheels/decal options left over from an older seeding of this car (e.g.
+            # the previous Kenney models) — this set of cars doesn't support either.
+            car.options.filter(option_type__in=["wheels", "decal"]).delete()
+            self.seed_options(car, spec["paint_mesh"])
             if options["verbosity"]:
                 self.stdout.write(f"Seeded {car}")
 
-    def seed_options(self, car):
+    def seed_options(self, car, paint_mesh):
+        # Every paint swatch targets the same mesh, at a different colour.
         for label, hex_value in PAINTS:
-            self.option(car, "paint", label, "body", color_hex=hex_value)
+            self.option(car, "paint", label, paint_mesh, color_hex=hex_value)
 
-        for label, mesh_name, part in WHEELS:
-            option = self.option(car, "wheels", label, mesh_name)
-            if part:
-                attach(option.part_file, ASSETS / "models" / part)
-                option.save()
-
+        # Wheel swapping and decals were built for the old Kenney models' consistent part
+        # naming; these scanned models don't have matching swappable parts, so those option
+        # types are left unseeded here — the customizer only shows the tabs a car actually has.
         for label, mesh_name in EXHAUSTS:
             self.option(car, "exhaust", label, mesh_name)
-
-        self.option(car, "decal", "None", "body")
-        decal = self.option(car, "decal", "Racing Stripes", "body")
-        attach(decal.texture_file, ASSETS / "textures" / "racing_stripes.png")
-        decal.save()
 
     def option(self, car, option_type, label, mesh_name, **fields):
         option, _ = CustomizationOption.objects.update_or_create(

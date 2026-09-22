@@ -24,28 +24,28 @@ class SeedDemoCarsCommandTests(TestCase):
         override.enable()
         self.addCleanup(override.disable)
 
-    def test_seeds_real_cars_with_palette_paint_and_all_option_types(self):
+    def test_seeds_real_cars_with_tint_paint_and_exhaust_options(self):
         call_command("seed_demo_cars", verbosity=0)
 
         self.assertEqual(Car.objects.filter(brand="AutoCraft").count(), 5)
         sedan = Car.objects.get(name="Sedan")
         self.assertTrue(sedan.model_file.name.endswith(".glb"))
-        self.assertEqual(sedan.paint_mode, Car.PaintMode.PALETTE)
-        self.assertTrue(sedan.paint_region)
+        self.assertEqual(sedan.paint_mode, Car.PaintMode.TINT)
+        self.assertFalse(sedan.paint_region)
         self.assertTrue(sedan.featured)
         self.assertTrue(all(car.long_description for car in Car.objects.filter(brand="AutoCraft")))
         self.assertTrue(sedan.thumbnail.name.endswith(".png"))
         self.assertTrue(all(car.thumbnail for car in Car.objects.filter(brand="AutoCraft")))
         types = set(sedan.options.values_list("option_type", flat=True))
-        self.assertEqual(types, {"paint", "wheels", "exhaust", "decal"})
+        self.assertEqual(types, {"paint", "exhaust"})
 
-    def test_wheel_designs_carry_their_own_part_files(self):
+    def test_paint_options_all_target_the_cars_own_paint_mesh(self):
         call_command("seed_demo_cars", verbosity=0)
 
-        wheels = Car.objects.get(name="Sedan").options.filter(option_type="wheels")
-        with_parts = [w for w in wheels if w.part_file]
-        self.assertGreaterEqual(len(with_parts), 2)
-        self.assertTrue(any(not w.part_file for w in wheels))
+        sedan = Car.objects.get(name="Sedan")
+        mesh_names = set(sedan.options.filter(option_type="paint").values_list("mesh_name", flat=True))
+        self.assertEqual(len(mesh_names), 1)
+        self.assertTrue(next(iter(mesh_names)))
 
     def test_reseeding_replaces_a_stale_model_file(self):
         call_command("seed_demo_cars", verbosity=0)
