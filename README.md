@@ -63,8 +63,11 @@ Then open http://127.0.0.1:8000/. Stop with `Ctrl+C`.
 
 ## Notes
 
-- The demo cars use free CC0 models from the Kenney Car Kit (see `cars/seed_assets/README.md`). They have
-  no interior or exhaust parts, so those cars offer paint, wheels, generated exhaust tips and decals.
+- ⚠️ The demo cars are realistic scanned models sourced from Sketchfab, not the original Kenney CC0 set —
+  **most are licensed non-commercial only**, and one carries a real F1 team's sponsor livery. Fine for
+  coursework, but read `cars/seed_assets/README.md` before deploying this anywhere public or putting it
+  in a portfolio. Each car offers a different mix of paint, wheel colour, spoiler, generated exhaust tips
+  and decals depending on what the underlying model actually supports — see that same file for specifics.
 - To add your own car, upload a `.glb` as the car's "model file" in the admin panel and add its
   customization options there. A car with no model file falls back to a built-in placeholder.
 - After editing CSS or JS, hard-refresh the browser (`Ctrl+Shift+R`), since the dev server doesn't send

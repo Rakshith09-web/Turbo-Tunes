@@ -3,3 +3,9 @@ __pycache__/
 *.pyc
 db.sqlite3
 media/
+
+# Raw asset downloads (already processed into cars/seed_assets/) — large, not needed by the app.
+/*.zip
+
+# Claude Code's local tooling config — personal to this machine, not app code.
+.claude/
