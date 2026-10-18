@@ -373,9 +373,10 @@
 }
 
 .atmosphere-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  display: flex;
+}
+.atmosphere-actions .atmo-btn {
+  width: 100%;
 }
 
 .atmo-btn {
@@ -402,11 +403,6 @@
   background: #1e293b;
   color: #38bdf8;
   border-color: #38bdf8;
-}
-.atmo-btn.headlights-active {
-  background: #fef08a;
-  color: #854d0e;
-  border-color: #eab308;
 }
 
 .underglow-row {

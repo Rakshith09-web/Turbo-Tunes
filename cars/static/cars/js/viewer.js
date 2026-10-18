@@ -795,57 +795,7 @@ function addSaveControls() {
   viewerEl.appendChild(bar);
 }
 
-// ---- Headlights, Neon Underglow & Midnight Mode ---------------------------
-let headlightsGroup = null;
-let headlightsEnabled = false;
-
-function buildHeadlights() {
-  if (!carRoot) return null;
-  const box = new THREE.Box3().setFromObject(carRoot);
-  const size = box.getSize(new THREE.Vector3());
-  const center = box.getCenter(new THREE.Vector3());
-
-  const group = new THREE.Group();
-  group.name = "HeadlightsGroup";
-
-  const yPos = box.min.y + size.y * 0.38;
-  const zPos = box.max.z - 0.04;
-  const xOffset = size.x * 0.32;
-
-  const createLight = (x) => {
-    const spot = new THREE.SpotLight(0xfffaed, 4.5, 30, Math.PI / 5.2, 0.45, 1.1);
-    spot.position.set(center.x + x, yPos, zPos);
-
-    const target = new THREE.Object3D();
-    target.position.set(center.x + x * 0.5, box.min.y, zPos + 20);
-    scene.add(target);
-    spot.target = target;
-    group.add(spot);
-
-    const bulbGeo = new THREE.SphereGeometry(size.x * 0.04, 16, 16);
-    const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const bulb = new THREE.Mesh(bulbGeo, bulbMat);
-    bulb.position.set(center.x + x, yPos, zPos);
-    group.add(bulb);
-  };
-
-  createLight(-xOffset);
-  createLight(xOffset);
-
-  return group;
-}
-
-function setHeadlights(enabled) {
-  headlightsEnabled = enabled;
-  const existing = scene.getObjectByName("HeadlightsGroup");
-  if (existing) scene.remove(existing);
-
-  if (enabled && carRoot) {
-    headlightsGroup = buildHeadlights();
-    if (headlightsGroup) scene.add(headlightsGroup);
-  }
-}
-
+// ---- Neon Underglow & Midnight Mode ---------------------------------------
 let underglowGroup = null;
 let activeUnderglowColor = "none";
 
@@ -935,7 +885,7 @@ function addAtmosphereControls() {
 
   const header = document.createElement("div");
   header.className = "atmosphere-header";
-  header.innerHTML = `<span>Lighting & Ambience</span>`;
+  header.innerHTML = `<span>Ambience & Glow</span>`;
   bar.appendChild(header);
 
   const actions = document.createElement("div");
@@ -946,13 +896,7 @@ function addAtmosphereControls() {
   nightBtn.textContent = "🌙 Midnight";
   nightBtn.title = "Switch between Day and Midnight Garage mode";
 
-  const lightsBtn = document.createElement("button");
-  lightsBtn.className = "atmo-btn btn-lights";
-  lightsBtn.textContent = "💡 Lights";
-  lightsBtn.title = "Toggle front headlights";
-
   actions.appendChild(nightBtn);
-  actions.appendChild(lightsBtn);
   bar.appendChild(actions);
 
   const glowRow = document.createElement("div");
@@ -996,19 +940,9 @@ function addAtmosphereControls() {
     nightBtn.classList.toggle("active", nextState);
     nightBtn.textContent = nextState ? "☀️ Daylight" : "🌙 Midnight";
 
-    if (nextState && !headlightsEnabled) {
-      setHeadlights(true);
-      lightsBtn.classList.add("headlights-active");
-    }
     if (nextState && activeUnderglowColor === "none") {
       selectUnderglow("#00f0ff");
     }
-  });
-
-  lightsBtn.addEventListener("click", () => {
-    const nextState = !headlightsEnabled;
-    setHeadlights(nextState);
-    lightsBtn.classList.toggle("headlights-active", nextState);
   });
 
   UNDERGLOW_COLORS.forEach((item) => {
