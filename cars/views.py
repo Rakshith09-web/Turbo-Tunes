@@ -90,6 +90,7 @@ def car_customizer(request, pk):
         "paintMode": car.paint_mode,
         "paintRegion": car.paint_region,
         "carId": car.id,
+        "name": car.name,
         "isAuthenticated": request.user.is_authenticated,
     }
 

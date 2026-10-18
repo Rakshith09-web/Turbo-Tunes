@@ -796,7 +796,9 @@ function addSaveControls() {
 let audioEngine = null;
 
 function addTurboAudioControls() {
-  audioEngine = new TurboAudioEngine();
+  const carName = carData.name || (document.querySelector(".car-title") ? document.querySelector(".car-title").textContent : "");
+  audioEngine = new TurboAudioEngine(carName);
+  const profile = audioEngine.profile;
 
   const bar = document.createElement("div");
   bar.className = "turbo-audio-bar";
@@ -805,6 +807,11 @@ function addTurboAudioControls() {
   header.className = "turbo-audio-header";
   header.innerHTML = `<span>Turbo Sound</span><span class="turbo-audio-badge" id="turbo-badge">OFF</span>`;
   bar.appendChild(header);
+
+  const subHeader = document.createElement("div");
+  subHeader.className = "turbo-audio-subtitle";
+  subHeader.textContent = profile.engineTitle;
+  bar.appendChild(subHeader);
 
   const actions = document.createElement("div");
   actions.className = "turbo-audio-actions";
@@ -844,7 +851,7 @@ function addTurboAudioControls() {
 
   audioEngine.onRpmChange = (rpm) => {
     rpmNum.textContent = rpm;
-    const pct = Math.min(100, Math.max(0, (rpm / 7500) * 100));
+    const pct = Math.min(100, Math.max(0, (rpm / profile.maxRpm) * 100));
     rpmFill.style.width = pct + "%";
   };
 
