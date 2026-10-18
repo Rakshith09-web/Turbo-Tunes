@@ -3,6 +3,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DecalGeometry } from "three/addons/geometries/DecalGeometry.js";
 import { createPalettePainter } from "./palette.js";
+import { TurboAudioEngine } from "./turbo_audio.js";
 
 const carData = JSON.parse(document.getElementById("car-data").textContent);
 const viewerEl = document.getElementById("viewer");
@@ -28,10 +29,10 @@ const camera = new THREE.PerspectiveCamera(
   1000
 );
 
-// ?capture keeps the last rendered frame readable, for saving car thumbnails.
+// preserveDrawingBuffer enables clean snapshot downloads and thumbnail captures
 const renderer = new THREE.WebGLRenderer({
   antialias: true,
-  preserveDrawingBuffer: new URLSearchParams(location.search).has("capture"),
+  preserveDrawingBuffer: true,
 });
 renderer.setSize(viewerEl.clientWidth, viewerEl.clientHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -133,6 +134,39 @@ const VIEW_DIRECTIONS = {
   bottom: new THREE.Vector3(0, -1, 0.01),
 };
 
+function takeSnapshot() {
+  renderer.render(scene, camera);
+  const canvas = renderer.domElement;
+
+  const exportCanvas = document.createElement("canvas");
+  exportCanvas.width = canvas.width;
+  exportCanvas.height = canvas.height;
+  const ctx = exportCanvas.getContext("2d");
+
+  // Draw 3D canvas
+  ctx.drawImage(canvas, 0, 0);
+
+  // Add sleek branding watermark
+  const padding = 24;
+  ctx.save();
+  ctx.font = "600 15px 'Space Grotesk', sans-serif";
+  ctx.fillStyle = "rgba(32, 31, 28, 0.75)";
+  ctx.textAlign = "right";
+  ctx.textBaseline = "bottom";
+  const brandText = "TURBO TUNES  |  " + (carData.brand || "") + " " + (carData.name || "");
+  ctx.fillText(brandText, exportCanvas.width - padding, exportCanvas.height - padding);
+  ctx.restore();
+
+  // Trigger download
+  const link = document.createElement("a");
+  const fileName = `TurboTunes-${(carData.name || "car").replace(/\s+/g, "_")}.png`;
+  link.download = fileName;
+  link.href = exportCanvas.toDataURL("image/png");
+  link.click();
+
+  showToast("Saved snapshot to downloads");
+}
+
 function addViewPresetButtons() {
   const bar = document.createElement("div");
   bar.className = "view-presets";
@@ -142,6 +176,14 @@ function addViewPresetButtons() {
     btn.addEventListener("click", () => frameCameraFromDirection(VIEW_DIRECTIONS[name]));
     bar.appendChild(btn);
   });
+
+  const snapBtn = document.createElement("button");
+  snapBtn.className = "btn-snapshot";
+  snapBtn.innerHTML = `<span>📸 Snapshot</span>`;
+  snapBtn.title = "Download high-resolution image";
+  snapBtn.addEventListener("click", takeSnapshot);
+  bar.appendChild(snapBtn);
+
   viewerEl.appendChild(bar);
 }
 
@@ -751,6 +793,117 @@ function addSaveControls() {
   viewerEl.appendChild(bar);
 }
 
+let audioEngine = null;
+
+function addTurboAudioControls() {
+  audioEngine = new TurboAudioEngine();
+
+  const bar = document.createElement("div");
+  bar.className = "turbo-audio-bar";
+
+  const header = document.createElement("div");
+  header.className = "turbo-audio-header";
+  header.innerHTML = `<span>Turbo Sound</span><span class="turbo-audio-badge" id="turbo-badge">OFF</span>`;
+  bar.appendChild(header);
+
+  const actions = document.createElement("div");
+  actions.className = "turbo-audio-actions";
+
+  const igniteBtn = document.createElement("button");
+  igniteBtn.className = "turbo-btn btn-ignite";
+  igniteBtn.textContent = "Start Engine";
+
+  const revBtn = document.createElement("button");
+  revBtn.className = "turbo-btn btn-rev";
+  revBtn.textContent = "Rev (Hold)";
+  revBtn.disabled = true;
+  revBtn.title = "Click & hold or press Spacebar to rev";
+
+  actions.appendChild(igniteBtn);
+  actions.appendChild(revBtn);
+  bar.appendChild(actions);
+
+  const meter = document.createElement("div");
+  meter.className = "turbo-rpm-meter";
+  meter.innerHTML = `
+    <div class="turbo-rpm-text">
+      <span>RPM</span>
+      <span id="turbo-rpm-num">0</span>
+    </div>
+    <div class="turbo-rpm-bar-track">
+      <div class="turbo-rpm-bar-fill" id="turbo-rpm-fill"></div>
+    </div>
+  `;
+  bar.appendChild(meter);
+
+  viewerEl.appendChild(bar);
+
+  const badge = document.getElementById("turbo-badge");
+  const rpmNum = document.getElementById("turbo-rpm-num");
+  const rpmFill = document.getElementById("turbo-rpm-fill");
+
+  audioEngine.onRpmChange = (rpm) => {
+    rpmNum.textContent = rpm;
+    const pct = Math.min(100, Math.max(0, (rpm / 7500) * 100));
+    rpmFill.style.width = pct + "%";
+  };
+
+  igniteBtn.addEventListener("click", () => {
+    const running = audioEngine.toggleEngine();
+    if (running) {
+      igniteBtn.textContent = "Stop Engine";
+      igniteBtn.classList.add("running");
+      badge.textContent = "IDLE";
+      badge.classList.add("active");
+      revBtn.disabled = false;
+      showToast("Engine started! Hold Rev or press Spacebar");
+    } else {
+      igniteBtn.textContent = "Start Engine";
+      igniteBtn.classList.remove("running");
+      badge.textContent = "OFF";
+      badge.classList.remove("active");
+      revBtn.disabled = true;
+      rpmNum.textContent = "0";
+      rpmFill.style.width = "0%";
+    }
+  });
+
+  const startRev = (e) => {
+    if (e && e.type !== "keydown") e.preventDefault();
+    if (!audioEngine.isRunning) return;
+    revBtn.classList.add("revving");
+    badge.textContent = "REV";
+    audioEngine.startRev();
+  };
+
+  const endRev = (e) => {
+    if (e && e.type !== "keyup") e.preventDefault();
+    if (!audioEngine.isRunning) return;
+    revBtn.classList.remove("revving");
+    badge.textContent = "IDLE";
+    audioEngine.releaseRev();
+  };
+
+  revBtn.addEventListener("mousedown", startRev);
+  window.addEventListener("mouseup", endRev);
+  revBtn.addEventListener("touchstart", startRev, { passive: false });
+  window.addEventListener("touchend", endRev);
+
+  // Spacebar revving support
+  window.addEventListener("keydown", (e) => {
+    if (e.code === "Space" && (e.target === document.body || e.target === viewerEl) && audioEngine.isRunning && !audioEngine.isRevving) {
+      e.preventDefault();
+      startRev(e);
+    }
+  });
+  window.addEventListener("keyup", (e) => {
+    if (e.code === "Space" && audioEngine.isRunning && audioEngine.isRevving) {
+      e.preventDefault();
+      endRev(e);
+    }
+  });
+}
+
 function applyPreselectedOptions() {
   preselectedOptionIds.forEach((id) => {
     const option = carData.options.find((o) => o.id === id);
@@ -764,6 +917,7 @@ function onModelReady() {
   frameCameraFromDirection(VIEW_DIRECTIONS.front);
   addViewPresetButtons();
   addSaveControls();
+  addTurboAudioControls();
   buildOptionsPanel();
   applyPreselectedOptions();
 }
