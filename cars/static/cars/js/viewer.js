@@ -101,8 +101,10 @@ viewerEl.addEventListener("pointerleave", () => {
   pointerNDC.y = 0;
 });
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-scene.add(new THREE.HemisphereLight(0xffffff, 0xd9d2c0, 0.75));
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
+scene.add(ambientLight);
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0xd9d2c0, 0.75);
+scene.add(hemiLight);
 const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
 keyLight.position.set(5, 10, 7);
 scene.add(keyLight);
@@ -793,6 +795,237 @@ function addSaveControls() {
   viewerEl.appendChild(bar);
 }
 
+// ---- Headlights, Neon Underglow & Midnight Mode ---------------------------
+let headlightsGroup = null;
+let headlightsEnabled = false;
+
+function buildHeadlights() {
+  if (!carRoot) return null;
+  const box = new THREE.Box3().setFromObject(carRoot);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+
+  const group = new THREE.Group();
+  group.name = "HeadlightsGroup";
+
+  const yPos = box.min.y + size.y * 0.38;
+  const zPos = box.max.z - 0.04;
+  const xOffset = size.x * 0.32;
+
+  const createLight = (x) => {
+    const spot = new THREE.SpotLight(0xfffaed, 4.5, 30, Math.PI / 5.2, 0.45, 1.1);
+    spot.position.set(center.x + x, yPos, zPos);
+
+    const target = new THREE.Object3D();
+    target.position.set(center.x + x * 0.5, box.min.y, zPos + 20);
+    scene.add(target);
+    spot.target = target;
+    group.add(spot);
+
+    const bulbGeo = new THREE.SphereGeometry(size.x * 0.04, 16, 16);
+    const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+    bulb.position.set(center.x + x, yPos, zPos);
+    group.add(bulb);
+  };
+
+  createLight(-xOffset);
+  createLight(xOffset);
+
+  return group;
+}
+
+function setHeadlights(enabled) {
+  headlightsEnabled = enabled;
+  const existing = scene.getObjectByName("HeadlightsGroup");
+  if (existing) scene.remove(existing);
+
+  if (enabled && carRoot) {
+    headlightsGroup = buildHeadlights();
+    if (headlightsGroup) scene.add(headlightsGroup);
+  }
+}
+
+let underglowGroup = null;
+let activeUnderglowColor = "none";
+
+function createUnderglowTexture(hexColor) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext("2d");
+
+  const gradient = ctx.createRadialGradient(256, 256, 30, 256, 256, 250);
+  gradient.addColorStop(0, hexColor);
+  gradient.addColorStop(0.3, hexColor);
+  gradient.addColorStop(0.65, hexColor + "99");
+  gradient.addColorStop(1, "rgba(0,0,0,0)");
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 512, 512);
+
+  return new THREE.CanvasTexture(canvas);
+}
+
+function setUnderglow(colorHex) {
+  activeUnderglowColor = colorHex;
+  const existing = scene.getObjectByName("UnderglowGroup");
+  if (existing) scene.remove(existing);
+
+  if (!colorHex || colorHex === "none" || !carRoot) return;
+
+  const box = new THREE.Box3().setFromObject(carRoot);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+
+  const group = new THREE.Group();
+  group.name = "UnderglowGroup";
+
+  const planeGeo = new THREE.PlaneGeometry(size.x * 1.5, size.z * 1.35);
+  const texture = createUnderglowTexture(colorHex);
+  const planeMat = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    opacity: 0.9,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const plane = new THREE.Mesh(planeGeo, planeMat);
+  plane.rotation.x = -Math.PI / 2;
+  plane.position.set(center.x, box.min.y + 0.015, center.z);
+  group.add(plane);
+
+  const lightColor = new THREE.Color(colorHex);
+  const p1 = new THREE.PointLight(lightColor, 2.5, size.x * 2.5);
+  p1.position.set(center.x - size.x * 0.3, box.min.y + 0.12, center.z);
+  group.add(p1);
+
+  const p2 = new THREE.PointLight(lightColor, 2.5, size.x * 2.5);
+  p2.position.set(center.x + size.x * 0.3, box.min.y + 0.12, center.z);
+  group.add(p2);
+
+  scene.add(group);
+}
+
+let isMidnightMode = false;
+
+function setMidnightMode(enabled) {
+  isMidnightMode = enabled;
+  const stage = document.querySelector(".viewer-stage");
+  if (stage) stage.classList.toggle("midnight-mode", enabled);
+
+  if (enabled) {
+    scene.background = new THREE.Color(0x0a0c10);
+    ambientLight.intensity = 0.18;
+    hemiLight.intensity = 0.22;
+    keyLight.intensity = 0.55;
+    keyLight.color.setHex(0xaec7e8);
+  } else {
+    scene.background = new THREE.Color(0xf5f0e6);
+    ambientLight.intensity = 0.55;
+    hemiLight.intensity = 0.75;
+    keyLight.intensity = 1.2;
+    keyLight.color.setHex(0xffffff);
+  }
+}
+
+function addAtmosphereControls() {
+  const bar = document.createElement("div");
+  bar.className = "atmosphere-bar";
+
+  const header = document.createElement("div");
+  header.className = "atmosphere-header";
+  header.innerHTML = `<span>Lighting & Ambience</span>`;
+  bar.appendChild(header);
+
+  const actions = document.createElement("div");
+  actions.className = "atmosphere-actions";
+
+  const nightBtn = document.createElement("button");
+  nightBtn.className = "atmo-btn btn-night";
+  nightBtn.textContent = "🌙 Midnight";
+  nightBtn.title = "Switch between Day and Midnight Garage mode";
+
+  const lightsBtn = document.createElement("button");
+  lightsBtn.className = "atmo-btn btn-lights";
+  lightsBtn.textContent = "💡 Lights";
+  lightsBtn.title = "Toggle front headlights";
+
+  actions.appendChild(nightBtn);
+  actions.appendChild(lightsBtn);
+  bar.appendChild(actions);
+
+  const glowRow = document.createElement("div");
+  glowRow.className = "underglow-row";
+  glowRow.innerHTML = `
+    <div class="underglow-header">
+      <span>Underglow Kit</span>
+      <span id="underglow-label-text">Off</span>
+    </div>
+    <div class="underglow-swatches" id="underglow-swatches"></div>
+  `;
+  bar.appendChild(glowRow);
+
+  viewerEl.appendChild(bar);
+
+  const UNDERGLOW_COLORS = [
+    { name: "Off", hex: "none" },
+    { name: "Cyan", hex: "#00f0ff" },
+    { name: "Purple", hex: "#d946ef" },
+    { name: "Lime", hex: "#22c55e" },
+    { name: "Amber", hex: "#f97316" },
+    { name: "Red", hex: "#ef4444" },
+    { name: "Blue", hex: "#3b82f6" },
+  ];
+
+  const swatchesEl = document.getElementById("underglow-swatches");
+  const labelText = document.getElementById("underglow-label-text");
+
+  function selectUnderglow(hex) {
+    setUnderglow(hex);
+    swatchesEl.querySelectorAll(".underglow-swatch").forEach((el) => {
+      el.classList.toggle("active", el.dataset.color === hex);
+    });
+    const found = UNDERGLOW_COLORS.find((c) => c.hex === hex);
+    if (labelText && found) labelText.textContent = found.name;
+  }
+
+  nightBtn.addEventListener("click", () => {
+    const nextState = !isMidnightMode;
+    setMidnightMode(nextState);
+    nightBtn.classList.toggle("active", nextState);
+    nightBtn.textContent = nextState ? "☀️ Daylight" : "🌙 Midnight";
+
+    if (nextState && !headlightsEnabled) {
+      setHeadlights(true);
+      lightsBtn.classList.add("headlights-active");
+    }
+    if (nextState && activeUnderglowColor === "none") {
+      selectUnderglow("#00f0ff");
+    }
+  });
+
+  lightsBtn.addEventListener("click", () => {
+    const nextState = !headlightsEnabled;
+    setHeadlights(nextState);
+    lightsBtn.classList.toggle("headlights-active", nextState);
+  });
+
+  UNDERGLOW_COLORS.forEach((item) => {
+    const swatch = document.createElement("button");
+    swatch.dataset.color = item.hex;
+    swatch.title = `Underglow: ${item.name}`;
+    if (item.hex === "none") {
+      swatch.className = "underglow-swatch underglow-swatch-none active";
+    } else {
+      swatch.className = "underglow-swatch";
+      swatch.style.backgroundColor = item.hex;
+    }
+    swatch.addEventListener("click", () => selectUnderglow(item.hex));
+    swatchesEl.appendChild(swatch);
+  });
+}
+
 let audioEngine = null;
 
 function addTurboAudioControls() {
@@ -924,6 +1157,7 @@ function onModelReady() {
   frameCameraFromDirection(VIEW_DIRECTIONS.front);
   addViewPresetButtons();
   addSaveControls();
+  addAtmosphereControls();
   addTurboAudioControls();
   buildOptionsPanel();
   applyPreselectedOptions();

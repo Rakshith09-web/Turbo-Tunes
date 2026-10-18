@@ -341,3 +341,144 @@
   transition: width 0.05s linear;
 }
 
+/* Atmosphere & Lighting Control Console */
+.atmosphere-bar {
+  position: absolute;
+  top: 64px;
+  left: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 10px 28px rgba(32, 31, 28, 0.08);
+  width: 215px;
+  box-sizing: border-box;
+  z-index: 10;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.atmosphere-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-strong);
+}
+
+.atmosphere-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.atmo-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 38px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 4px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  box-sizing: border-box;
+}
+.atmo-btn:hover {
+  border-color: var(--accent);
+}
+.atmo-btn.active {
+  background: #1e293b;
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+.atmo-btn.headlights-active {
+  background: #fef08a;
+  color: #854d0e;
+  border-color: #eab308;
+}
+
+.underglow-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.underglow-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted-strong);
+}
+.underglow-swatches {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.underglow-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  flex-shrink: 0;
+}
+.underglow-swatch:hover {
+  transform: scale(1.15);
+}
+.underglow-swatch.active {
+  border-color: #0f172a;
+  transform: scale(1.15);
+  box-shadow: 0 0 10px currentColor;
+}
+.underglow-swatch-none {
+  background: transparent;
+  border: 1.5px dashed var(--muted-strong);
+  position: relative;
+}
+.underglow-swatch-none.active {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+/* Midnight Mode Styling for Stage and Panels */
+.viewer-stage.midnight-mode {
+  background: radial-gradient(ellipse at 50% 85%, rgba(0, 240, 255, 0.12) 0%, rgba(10, 12, 16, 0.98) 75%), #0a0c10 !important;
+}
+.viewer-stage.midnight-mode .atmosphere-bar,
+.viewer-stage.midnight-mode .turbo-audio-bar {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+.viewer-stage.midnight-mode .atmosphere-header,
+.viewer-stage.midnight-mode .turbo-audio-header,
+.viewer-stage.midnight-mode .underglow-header,
+.viewer-stage.midnight-mode .turbo-rpm-text {
+  color: #94a3b8;
+}
+.viewer-stage.midnight-mode .atmo-btn,
+.viewer-stage.midnight-mode .turbo-btn {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+}
+.viewer-stage.midnight-mode .underglow-swatch.active {
+  border-color: #ffffff;
+}
+
+
