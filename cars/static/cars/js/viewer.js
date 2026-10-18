@@ -20,7 +20,7 @@ const savedSelectionEl = document.getElementById("selected-options");
 const preselectedOptionIds = savedSelectionEl ? JSON.parse(savedSelectionEl.textContent) : [];
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xf5f0e6);
+scene.background = null;
 
 const camera = new THREE.PerspectiveCamera(
   45,
@@ -33,6 +33,7 @@ const camera = new THREE.PerspectiveCamera(
 const renderer = new THREE.WebGLRenderer({
   antialias: true,
   preserveDrawingBuffer: true,
+  alpha: true,
 });
 renderer.setSize(viewerEl.clientWidth, viewerEl.clientHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -145,6 +146,26 @@ function takeSnapshot() {
   exportCanvas.height = canvas.height;
   const ctx = exportCanvas.getContext("2d");
 
+  // Draw background matching active mode
+  if (isMidnightMode) {
+    const bgGrad = ctx.createRadialGradient(
+      exportCanvas.width * 0.5,
+      exportCanvas.height * 0.75,
+      exportCanvas.width * 0.05,
+      exportCanvas.width * 0.5,
+      exportCanvas.height * 0.75,
+      exportCanvas.width * 0.75
+    );
+    bgGrad.addColorStop(0, "#1e2533");
+    bgGrad.addColorStop(0.45, "#151b26");
+    bgGrad.addColorStop(1, "#0d1117");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+  } else {
+    ctx.fillStyle = "#f5f0e6";
+    ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+  }
+
   // Draw 3D canvas
   ctx.drawImage(canvas, 0, 0);
 
@@ -152,7 +173,7 @@ function takeSnapshot() {
   const padding = 24;
   ctx.save();
   ctx.font = "600 15px 'Space Grotesk', sans-serif";
-  ctx.fillStyle = "rgba(32, 31, 28, 0.75)";
+  ctx.fillStyle = isMidnightMode ? "rgba(255, 255, 255, 0.75)" : "rgba(32, 31, 28, 0.75)";
   ctx.textAlign = "right";
   ctx.textBaseline = "bottom";
   const brandText = "TURBO TUNES  |  " + (carData.brand || "") + " " + (carData.name || "");
@@ -865,13 +886,11 @@ function setMidnightMode(enabled) {
   if (stage) stage.classList.toggle("midnight-mode", enabled);
 
   if (enabled) {
-    scene.background = new THREE.Color(0x0a0c10);
-    ambientLight.intensity = 0.18;
-    hemiLight.intensity = 0.22;
-    keyLight.intensity = 0.55;
-    keyLight.color.setHex(0xaec7e8);
+    ambientLight.intensity = 0.42;
+    hemiLight.intensity = 0.5;
+    keyLight.intensity = 1.05;
+    keyLight.color.setHex(0xd0e2ff);
   } else {
-    scene.background = new THREE.Color(0xf5f0e6);
     ambientLight.intensity = 0.55;
     hemiLight.intensity = 0.75;
     keyLight.intensity = 1.2;
