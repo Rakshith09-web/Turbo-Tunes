@@ -39,8 +39,8 @@ renderer.setSize(viewerEl.clientWidth, viewerEl.clientHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 viewerEl.appendChild(renderer.domElement);
 
-// Lift the car in the frame so the floating toolbar at the bottom doesn't cover it.
-const VIEW_LIFT = 0.1;
+// Lift the car slightly in the frame so bottom toolbar doesn't cover wheels.
+const VIEW_LIFT = 0.03;
 function applyViewOffset() {
   const width = viewerEl.clientWidth;
   const height = viewerEl.clientHeight;
@@ -50,8 +50,10 @@ applyViewOffset();
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
+controls.dampingFactor = 0.06;
 controls.enableZoom = true;
-controls.zoomSpeed = 1.1;
+controls.zoomSpeed = 0.85;
+controls.screenSpacePanning = true;
 // Safe zoom boundaries to prevent disappearing geometry or inversion
 controls.minDistance = 1.2;
 controls.maxDistance = 18.0;
@@ -117,18 +119,66 @@ keyLight.position.set(5, 10, 7);
 scene.add(keyLight);
 
 let carRoot = null;
+let carBounds = null;
 
-function frameCameraFromDirection(direction) {
-  if (!carRoot) return;
+function getCarBounds() {
+  if (!carRoot) return null;
   const box = new THREE.Box3().setFromObject(carRoot);
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
   const maxDim = Math.max(size.x, size.y, size.z);
+  carBounds = { box, size, center, maxDim };
+  return carBounds;
+}
+
+// Computes the exact safe distance from car center to its outer surface along cameraOffset
+function getDirectionalSafeMinDistance(cameraOffset) {
+  if (!carBounds && !getCarBounds()) return 2.0;
+  const { size } = carBounds;
+  const hx = size.x * 0.5;
+  const hy = size.y * 0.5;
+  const hz = size.z * 0.5;
+
+  const len = cameraOffset.length() || 1;
+  const nx = Math.abs(cameraOffset.x) / len;
+  const ny = Math.abs(cameraOffset.y) / len;
+  const nz = Math.abs(cameraOffset.z) / len;
+
+  const tX = nx > 0.0001 ? hx / nx : Infinity;
+  const tY = ny > 0.0001 ? hy / ny : Infinity;
+  const tZ = nz > 0.0001 ? hz / nz : Infinity;
+
+  // 1.7m buffer guarantees the entire car boundary (bumpers, hood, wheels) remains fully framed and never sliced or clipped
+  const surfaceDist = Math.min(tX, tY, tZ);
+  return surfaceDist + 1.7;
+}
+
+function updateSafeZoomLimits() {
+  if (!carBounds && !getCarBounds()) return;
+  const offset = camera.position.clone().sub(controls.target);
+  const currentDist = offset.length();
+  if (currentDist < 0.001) return;
+
+  const safeMin = getDirectionalSafeMinDistance(offset);
+  controls.minDistance = safeMin;
+  controls.maxDistance = carBounds.maxDim * 3.5;
+
+  if (currentDist < safeMin) {
+    offset.normalize().multiplyScalar(safeMin);
+    camera.position.copy(controls.target.clone().add(offset));
+  }
+}
+
+function frameCameraFromDirection(direction) {
+  if (!carRoot) return;
+  const bounds = getCarBounds();
+  if (!bounds) return;
+  const { center, maxDim } = bounds;
   const overhead = Math.abs(direction.y) > 0.9; // top/bottom need more room than side views
   const distance = maxDim * (overhead ? 1.95 : 1.65);
 
-  // Calibrate safe zoom boundaries to this specific car's dimensions
-  controls.minDistance = Math.max(1.0, maxDim * 0.36);
+  const safeMin = getDirectionalSafeMinDistance(direction);
+  controls.minDistance = safeMin;
   controls.maxDistance = maxDim * 3.5;
 
   camera.position.copy(center.clone().add(direction.clone().normalize().multiplyScalar(distance)));
@@ -139,27 +189,84 @@ function frameCameraFromDirection(direction) {
 }
 
 function zoomCamera(dir) {
-  if (!carRoot) return;
+  if (!carBounds && !getCarBounds()) return;
   const target = controls.target;
-  const currentDist = camera.position.distanceTo(target);
-  const factor = dir > 0 ? 1.25 : 0.8;
-  const newDist = THREE.MathUtils.clamp(
-    currentDist * factor,
-    controls.minDistance,
-    controls.maxDistance
-  );
+  const offset = camera.position.clone().sub(target);
+  const currentDist = offset.length();
+  const safeMin = getDirectionalSafeMinDistance(offset);
+  const safeMax = carBounds.maxDim * 3.5;
 
-  const offset = camera.position.clone().sub(target).normalize().multiplyScalar(newDist);
+  const factor = dir > 0 ? 1.18 : 0.84;
+  const newDist = THREE.MathUtils.clamp(currentDist * factor, safeMin, safeMax);
+
+  offset.normalize().multiplyScalar(newDist);
   camera.position.copy(target.clone().add(offset));
   controls.update();
   captureRestAngles();
 }
 
+const focusRaycaster = new THREE.Raycaster();
+const focusMouse = new THREE.Vector2();
+
+let focusTween = {
+  active: false,
+  startPos: new THREE.Vector3(),
+  targetPos: new THREE.Vector3(),
+  startTarget: new THREE.Vector3(),
+  targetTarget: new THREE.Vector3(),
+  startTime: 0,
+  duration: 600,
+};
+
+function focusCameraOn(targetPoint, distance = 1.45) {
+  if (!carBounds && !getCarBounds()) return;
+  const dir = camera.position.clone().sub(controls.target).normalize();
+
+  focusTween.startPos.copy(camera.position);
+  focusTween.startTarget.copy(controls.target);
+  focusTween.targetTarget.copy(targetPoint);
+  focusTween.targetPos.copy(targetPoint.clone().add(dir.multiplyScalar(distance)));
+  focusTween.startTime = performance.now();
+  focusTween.active = true;
+}
+
+function updateFocusTween() {
+  if (!focusTween.active) return;
+  const elapsed = performance.now() - focusTween.startTime;
+  const t = Math.min(1.0, elapsed / focusTween.duration);
+  const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+  camera.position.lerpVectors(focusTween.startPos, focusTween.targetPos, ease);
+  controls.target.lerpVectors(focusTween.startTarget, focusTween.targetTarget, ease);
+  controls.update();
+
+  if (t >= 1.0) {
+    focusTween.active = false;
+    captureRestAngles();
+  }
+}
+
+viewerEl.addEventListener("dblclick", (e) => {
+  if (!carRoot || (!carBounds && !getCarBounds())) return;
+  const rect = viewerEl.getBoundingClientRect();
+  focusMouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  focusMouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+  focusRaycaster.setFromCamera(focusMouse, camera);
+  const hits = focusRaycaster.intersectObjects(carRoot.children, true);
+
+  if (hits.length > 0) {
+    focusCameraOn(hits[0].point, 1.45);
+  } else {
+    frameCameraFromDirection(VIEW_DIRECTIONS.front);
+  }
+});
+
 const VIEW_DIRECTIONS = {
-  front: new THREE.Vector3(0, 0.2, 1),
-  rear: new THREE.Vector3(0, 0.2, -1),
-  left: new THREE.Vector3(-1, 0.2, 0),
-  right: new THREE.Vector3(1, 0.2, 0),
+  front: new THREE.Vector3(0, 0.12, 1),
+  rear: new THREE.Vector3(0, 0.12, -1),
+  left: new THREE.Vector3(-1, 0.12, 0),
+  right: new THREE.Vector3(1, 0.12, 0),
   top: new THREE.Vector3(0, 1, 0.01),
   bottom: new THREE.Vector3(0, -1, 0.01),
 };
@@ -240,6 +347,13 @@ function addViewPresetButtons() {
   zoomOutBtn.title = "Zoom Out";
   zoomOutBtn.addEventListener("click", () => zoomCamera(1));
   bar.appendChild(zoomOutBtn);
+
+  const resetZoomBtn = document.createElement("button");
+  resetZoomBtn.className = "btn-zoom-reset";
+  resetZoomBtn.textContent = "⟲ Fit";
+  resetZoomBtn.title = "Reset View / Fit Car";
+  resetZoomBtn.addEventListener("click", () => frameCameraFromDirection(VIEW_DIRECTIONS.front));
+  bar.appendChild(resetZoomBtn);
 
   const snapBtn = document.createElement("button");
   snapBtn.className = "btn-snapshot";
@@ -1195,10 +1309,19 @@ window.addEventListener("resize", onResize);
 
 function animate() {
   requestAnimationFrame(animate);
-  controls.update();
-  if (!isDragging) applyIdleDrift();
+  if (!focusTween.active) {
+    updateSafeZoomLimits();
+    controls.update();
+    if (!isDragging) applyIdleDrift();
+  } else {
+    updateFocusTween();
+  }
   renderer.render(scene, camera);
 }
 animate();
+
+window.controls = controls;
+window.camera = camera;
+window.scene = scene;
 
 export { scene, carData, getSelectedOptionIds };
