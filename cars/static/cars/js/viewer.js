@@ -156,9 +156,9 @@ function takeSnapshot() {
       exportCanvas.height * 0.75,
       exportCanvas.width * 0.75
     );
-    bgGrad.addColorStop(0, "#1e2533");
-    bgGrad.addColorStop(0.45, "#151b26");
-    bgGrad.addColorStop(1, "#0d1117");
+    bgGrad.addColorStop(0, "#455268");
+    bgGrad.addColorStop(0.5, "#2c3545");
+    bgGrad.addColorStop(1, "#181f2a");
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
   } else {
@@ -886,10 +886,10 @@ function setMidnightMode(enabled) {
   if (stage) stage.classList.toggle("midnight-mode", enabled);
 
   if (enabled) {
-    ambientLight.intensity = 0.42;
-    hemiLight.intensity = 0.5;
-    keyLight.intensity = 1.05;
-    keyLight.color.setHex(0xd0e2ff);
+    ambientLight.intensity = 0.65;
+    hemiLight.intensity = 0.72;
+    keyLight.intensity = 1.35;
+    keyLight.color.setHex(0xe2eeff);
   } else {
     ambientLight.intensity = 0.55;
     hemiLight.intensity = 0.75;
