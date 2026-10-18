@@ -131,40 +131,97 @@ function getCarBounds() {
   return carBounds;
 }
 
-// Computes the exact safe distance from car center to its outer surface along cameraOffset
-function getDirectionalSafeMinDistance(cameraOffset) {
-  if (!carBounds && !getCarBounds()) return 2.0;
-  const { size } = carBounds;
-  const hx = size.x * 0.5;
-  const hy = size.y * 0.5;
-  const hz = size.z * 0.5;
 
-  const len = cameraOffset.length() || 1;
-  const nx = Math.abs(cameraOffset.x) / len;
-  const ny = Math.abs(cameraOffset.y) / len;
-  const nz = Math.abs(cameraOffset.z) / len;
+let isInteriorMode = false;
+let cabinLight = null;
+let cabinFill = null;
 
-  const tX = nx > 0.0001 ? hx / nx : Infinity;
-  const tY = ny > 0.0001 ? hy / ny : Infinity;
-  const tZ = nz > 0.0001 ? hz / nz : Infinity;
+function ensureCabinLights() {
+  if (!cabinLight) {
+    cabinLight = new THREE.PointLight(0xfff7ed, 3.2, 3.5);
+    cabinLight.decay = 1.2;
+    cabinLight.position.set(0, 0.95, 0.15);
+    scene.add(cabinLight);
+  }
+  if (!cabinFill) {
+    cabinFill = new THREE.HemisphereLight(0xfffaed, 0x444444, 0.9);
+    cabinFill.position.set(0, 1.2, 0.1);
+    scene.add(cabinFill);
+  }
+}
 
-  // 1.7m buffer guarantees the entire car boundary (bumpers, hood, wheels) remains fully framed and never sliced or clipped
-  const surfaceDist = Math.min(tX, tY, tZ);
-  return surfaceDist + 1.7;
+function enterInteriorView() {
+  if (!carRoot) return;
+  const bounds = getCarBounds();
+  if (!bounds) return;
+  const { center, size } = bounds;
+
+  isInteriorMode = true;
+  ensureCabinLights();
+  cabinLight.visible = true;
+  cabinFill.visible = true;
+  cabinLight.intensity = 3.6;
+
+  // Driver cockpit perspective looking directly at steering wheel and curved digital display
+  const driverPos = new THREE.Vector3(
+    center.x - 0.28,
+    center.y + 0.18,
+    center.z - 0.04
+  );
+  const cockpitTarget = new THREE.Vector3(
+    center.x - 0.24,
+    center.y + 0.10,
+    center.z + 0.52
+  );
+
+  focusTween.startPos.copy(camera.position);
+  focusTween.startTarget.copy(controls.target);
+  focusTween.targetPos.copy(driverPos);
+  focusTween.targetTarget.copy(cockpitTarget);
+  focusTween.startTime = performance.now();
+  focusTween.duration = 650;
+  focusTween.active = true;
+
+  controls.minDistance = 0.10;
+  controls.maxDistance = 1.6;
+
+  document.querySelectorAll(".view-presets button").forEach((b) => {
+    b.classList.toggle("active", b.dataset.view === "interior");
+  });
+
+  showToast("Inside cabin • Inspecting interior & dashboard");
+}
+
+function exitInteriorView(direction = VIEW_DIRECTIONS.front) {
+  isInteriorMode = false;
+  if (cabinLight) cabinLight.intensity = 2.4;
+  document.querySelectorAll(".view-presets button").forEach((b) => {
+    b.classList.remove("active");
+  });
+  frameCameraFromDirection(direction);
+  showToast("Full showroom view restored");
 }
 
 function updateSafeZoomLimits() {
   if (!carBounds && !getCarBounds()) return;
+
+  if (isInteriorMode) {
+    controls.minDistance = 0.10;
+    controls.maxDistance = 1.6;
+    return;
+  }
+
+  // Smooth zoom all the way close to inspect interior, wheels, and details
+  // 0.35m safe minimum stops OrbitControls from collapsing through target (0 distance)
+  controls.minDistance = 0.35;
+  controls.maxDistance = carBounds.maxDim * 3.5;
+
   const offset = camera.position.clone().sub(controls.target);
   const currentDist = offset.length();
   if (currentDist < 0.001) return;
 
-  const safeMin = getDirectionalSafeMinDistance(offset);
-  controls.minDistance = safeMin;
-  controls.maxDistance = carBounds.maxDim * 3.5;
-
-  if (currentDist < safeMin) {
-    offset.normalize().multiplyScalar(safeMin);
+  if (currentDist < controls.minDistance) {
+    offset.normalize().multiplyScalar(controls.minDistance);
     camera.position.copy(controls.target.clone().add(offset));
   }
 }
@@ -174,11 +231,10 @@ function frameCameraFromDirection(direction) {
   const bounds = getCarBounds();
   if (!bounds) return;
   const { center, maxDim } = bounds;
-  const overhead = Math.abs(direction.y) > 0.9; // top/bottom need more room than side views
+  const overhead = Math.abs(direction.y) > 0.9;
   const distance = maxDim * (overhead ? 1.95 : 1.65);
 
-  const safeMin = getDirectionalSafeMinDistance(direction);
-  controls.minDistance = safeMin;
+  controls.minDistance = 0.35;
   controls.maxDistance = maxDim * 3.5;
 
   camera.position.copy(center.clone().add(direction.clone().normalize().multiplyScalar(distance)));
@@ -190,13 +246,34 @@ function frameCameraFromDirection(direction) {
 
 function zoomCamera(dir) {
   if (!carBounds && !getCarBounds()) return;
+
+  if (isInteriorMode) {
+    const target = controls.target;
+    const offset = camera.position.clone().sub(target);
+    const currentDist = offset.length();
+    const factor = dir > 0 ? 1.25 : 0.8;
+    const newDist = currentDist * factor;
+
+    if (dir > 0 && newDist > 1.55) {
+      exitInteriorView();
+      return;
+    }
+
+    const clampedDist = THREE.MathUtils.clamp(newDist, 0.10, 1.6);
+    offset.normalize().multiplyScalar(clampedDist);
+    camera.position.copy(target.clone().add(offset));
+    controls.update();
+    return;
+  }
+
+  // Exterior mode:
   const target = controls.target;
   const offset = camera.position.clone().sub(target);
   const currentDist = offset.length();
-  const safeMin = getDirectionalSafeMinDistance(offset);
+  const safeMin = 0.35;
   const safeMax = carBounds.maxDim * 3.5;
 
-  const factor = dir > 0 ? 1.18 : 0.84;
+  const factor = dir > 0 ? 1.22 : 0.80;
   const newDist = THREE.MathUtils.clamp(currentDist * factor, safeMin, safeMax);
 
   offset.normalize().multiplyScalar(newDist);
@@ -238,10 +315,11 @@ function updateFocusTween() {
 
   camera.position.lerpVectors(focusTween.startPos, focusTween.targetPos, ease);
   controls.target.lerpVectors(focusTween.startTarget, focusTween.targetTarget, ease);
-  controls.update();
+  camera.lookAt(controls.target);
 
   if (t >= 1.0) {
     focusTween.active = false;
+    controls.update();
     captureRestAngles();
   }
 }
@@ -256,9 +334,22 @@ viewerEl.addEventListener("dblclick", (e) => {
   const hits = focusRaycaster.intersectObjects(carRoot.children, true);
 
   if (hits.length > 0) {
-    focusCameraOn(hits[0].point, 1.45);
+    const hitMesh = hits[0].object;
+    if (/window|interior|seat|wheel/i.test(hitMesh.name) || isInteriorMode) {
+      if (!isInteriorMode) {
+        enterInteriorView();
+      } else {
+        focusCameraOn(hits[0].point, 0.45);
+      }
+    } else {
+      focusCameraOn(hits[0].point, 1.45);
+    }
   } else {
-    frameCameraFromDirection(VIEW_DIRECTIONS.front);
+    if (isInteriorMode) {
+      exitInteriorView();
+    } else {
+      frameCameraFromDirection(VIEW_DIRECTIONS.front);
+    }
   }
 });
 
@@ -327,10 +418,36 @@ function takeSnapshot() {
 function addViewPresetButtons() {
   const bar = document.createElement("div");
   bar.className = "view-presets";
-  Object.keys(VIEW_DIRECTIONS).forEach((name) => {
+
+  const presetList = [
+    { name: "front", label: "Front" },
+    { name: "rear", label: "Rear" },
+    { name: "left", label: "Left" },
+    { name: "right", label: "Right" },
+    { name: "top", label: "Top" },
+    { name: "interior", label: "Interior" },
+  ];
+
+  presetList.forEach((item) => {
     const btn = document.createElement("button");
-    btn.textContent = name[0].toUpperCase() + name.slice(1);
-    btn.addEventListener("click", () => frameCameraFromDirection(VIEW_DIRECTIONS[name]));
+    btn.textContent = item.label;
+    btn.dataset.view = item.name;
+    btn.addEventListener("click", () => {
+      if (item.name === "interior") {
+        if (isInteriorMode) {
+          exitInteriorView();
+        } else {
+          enterInteriorView();
+        }
+      } else {
+        if (isInteriorMode) {
+          isInteriorMode = false;
+          if (cabinLight) cabinLight.visible = false;
+        }
+        document.querySelectorAll(".view-presets button").forEach((b) => b.classList.remove("active"));
+        frameCameraFromDirection(VIEW_DIRECTIONS[item.name]);
+      }
+    });
     bar.appendChild(btn);
   });
 
@@ -352,7 +469,10 @@ function addViewPresetButtons() {
   resetZoomBtn.className = "btn-zoom-reset";
   resetZoomBtn.textContent = "⟲ Fit";
   resetZoomBtn.title = "Reset View / Fit Car";
-  resetZoomBtn.addEventListener("click", () => frameCameraFromDirection(VIEW_DIRECTIONS.front));
+  resetZoomBtn.addEventListener("click", () => {
+    if (isInteriorMode) exitInteriorView();
+    else frameCameraFromDirection(VIEW_DIRECTIONS.front);
+  });
   bar.appendChild(resetZoomBtn);
 
   const snapBtn = document.createElement("button");
@@ -1269,8 +1389,26 @@ function applyPreselectedOptions() {
   });
 }
 
+function setupWindowGlassMaterial() {
+  if (!carRoot) return;
+  carRoot.traverse((child) => {
+    if (child.isMesh && /window|glass/i.test(child.name)) {
+      child.material = child.material.clone();
+      child.material.transparent = true;
+      child.material.opacity = 0.22;
+      child.material.roughness = 0.06;
+      child.material.metalness = 0.85;
+      child.material.depthWrite = false;
+      child.material.side = THREE.DoubleSide;
+      child.material.needsUpdate = true;
+    }
+  });
+}
+
 function onModelReady() {
   scene.add(carRoot);
+  ensureCabinLights();
+  setupWindowGlassMaterial();
   if (carData.paintMode === "palette") setupPalette();
   frameCameraFromDirection(VIEW_DIRECTIONS.front);
   addViewPresetButtons();
@@ -1312,7 +1450,7 @@ function animate() {
   if (!focusTween.active) {
     updateSafeZoomLimits();
     controls.update();
-    if (!isDragging) applyIdleDrift();
+    if (!isDragging && !isInteriorMode) applyIdleDrift();
   } else {
     updateFocusTween();
   }

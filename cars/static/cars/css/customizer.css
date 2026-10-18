@@ -86,6 +86,11 @@
   color: var(--accent);
   border-color: var(--accent);
 }
+.view-presets button.active {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
 
 #options-panel {
   position: absolute;
