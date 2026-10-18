@@ -19,6 +19,10 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+admin.site.site_header = "Turbo Tunes Admin"
+admin.site.site_title = "Turbo Tunes"
+admin.site.index_title = "Turbo Tunes Administration"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('cars.urls')),

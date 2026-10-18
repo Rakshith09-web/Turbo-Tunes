@@ -199,7 +199,7 @@ class HomeViewTests(TestCase):
     def test_home_leads_with_the_site_name_over_the_tagline(self):
         response = self.client.get(reverse("home"))
 
-        self.assertContains(response, "<h1>AutoCraft 3D</h1>")
+        self.assertContains(response, "<h1>Turbo Tunes</h1>")
         self.assertContains(response, "Design your car")
 
     def test_home_does_not_list_individual_cars_by_name(self):

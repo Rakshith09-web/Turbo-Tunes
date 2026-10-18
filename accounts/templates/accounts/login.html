@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Log in — AutoCraft 3D{% endblock %}
+{% block title %}Log in — Turbo Tunes{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{% static 'auth.css' %}" />{% endblock %}
 {% block content %}
   <div class="auth page-in">
@@ -20,7 +20,7 @@
         <button class="btn btn-primary btn-block" type="submit">Log in</button>
       </form>
 
-      <p class="auth-alt">New to AutoCraft? <a href="{% url 'register' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Create an account</a></p>
+      <p class="auth-alt">New to Turbo Tunes? <a href="{% url 'register' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Create an account</a></p>
     </section>
   </div>
 {% endblock %}
