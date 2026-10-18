@@ -910,7 +910,7 @@ function addAtmosphereControls() {
   `;
   bar.appendChild(glowRow);
 
-  viewerEl.appendChild(bar);
+  getRightSidebar().appendChild(bar);
 
   const UNDERGLOW_COLORS = [
     { name: "Off", hex: "none" },
@@ -958,6 +958,16 @@ function addAtmosphereControls() {
     swatch.addEventListener("click", () => selectUnderglow(item.hex));
     swatchesEl.appendChild(swatch);
   });
+}
+
+function getRightSidebar() {
+  let sidebar = viewerEl.querySelector(".customizer-sidebar-right");
+  if (!sidebar) {
+    sidebar = document.createElement("div");
+    sidebar.className = "customizer-sidebar-right";
+    viewerEl.appendChild(sidebar);
+  }
+  return sidebar;
 }
 
 let audioEngine = null;
@@ -1010,7 +1020,7 @@ function addTurboAudioControls() {
   `;
   bar.appendChild(meter);
 
-  viewerEl.appendChild(bar);
+  getRightSidebar().appendChild(bar);
 
   const badge = document.getElementById("turbo-badge");
   const rpmNum = document.getElementById("turbo-rpm-num");
@@ -1091,8 +1101,8 @@ function onModelReady() {
   frameCameraFromDirection(VIEW_DIRECTIONS.front);
   addViewPresetButtons();
   addSaveControls();
-  addAtmosphereControls();
   addTurboAudioControls();
+  addAtmosphereControls();
   buildOptionsPanel();
   applyPreselectedOptions();
 }
