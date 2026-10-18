@@ -216,18 +216,20 @@
 /* Turbo Sound & Rev Simulator Console */
 .turbo-audio-bar {
   position: absolute;
-  top: 68px;
-  left: 16px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(8px);
+  top: 64px;
+  right: 16px;
+  left: auto;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 10px 14px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  box-shadow: 0 10px 25px rgba(32, 31, 28, 0.08);
-  min-width: 180px;
+  gap: 10px;
+  box-shadow: 0 10px 28px rgba(32, 31, 28, 0.08);
+  width: 215px;
+  box-sizing: border-box;
   z-index: 10;
 }
 
@@ -244,11 +246,12 @@
 
 .turbo-audio-badge {
   font-size: 10px;
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: 999px;
   background: var(--border);
   color: var(--muted-strong);
   font-weight: 600;
+  transition: all 0.2s ease;
 }
 .turbo-audio-badge.active {
   background: #22c55e;
@@ -256,24 +259,35 @@
 }
 
 .turbo-audio-actions {
-  display: flex;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 .turbo-btn {
-  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 38px;
   border: 1px solid var(--border);
   background: var(--card-bg);
   border-radius: 8px;
-  padding: 6px 10px;
+  padding: 4px 6px;
   font-size: 11px;
   font-weight: 500;
+  line-height: 1.25;
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
+  box-sizing: border-box;
 }
-.turbo-btn:hover {
+.turbo-btn:hover:not(:disabled) {
   border-color: var(--accent);
+}
+.turbo-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .turbo-btn.btn-ignite.running {
   background: #fee2e2;
@@ -285,7 +299,7 @@
   color: #ffffff;
   border-color: var(--accent);
 }
-.turbo-btn.btn-rev:active, .turbo-btn.btn-rev.revving {
+.turbo-btn.btn-rev:active:not(:disabled), .turbo-btn.btn-rev.revving {
   transform: scale(0.96);
   background: #ea580c;
 }
@@ -293,17 +307,18 @@
 .turbo-rpm-meter {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 .turbo-rpm-text {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 11px;
   font-family: monospace;
   color: var(--muted-strong);
 }
 .turbo-rpm-bar-track {
-  height: 5px;
+  height: 6px;
   background: var(--border);
   border-radius: 999px;
   overflow: hidden;
