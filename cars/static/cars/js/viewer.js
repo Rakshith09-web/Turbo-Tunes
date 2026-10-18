@@ -25,7 +25,7 @@ scene.background = null;
 const camera = new THREE.PerspectiveCamera(
   45,
   viewerEl.clientWidth / viewerEl.clientHeight,
-  0.1,
+  0.05,
   1000
 );
 
@@ -50,12 +50,14 @@ applyViewOffset();
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
+controls.enableZoom = true;
+controls.zoomSpeed = 1.1;
+// Safe zoom boundaries to prevent disappearing geometry or inversion
+controls.minDistance = 1.2;
+controls.maxDistance = 18.0;
 
 // Idle cursor drift: when the user isn't actively dragging, the camera gently
-// leans toward the cursor around a "rest" angle. OrbitControls re-derives its
-// own spherical state from camera.position on every update(), so nudging the
-// camera directly here (while controls.enabled stays true) is picked up
-// automatically the next time the user starts a drag — no state to reconcile.
+// leans toward the cursor around a "rest" angle.
 const IDLE_MAX_AZIMUTH = THREE.MathUtils.degToRad(10);
 const IDLE_MAX_POLAR = THREE.MathUtils.degToRad(6);
 let isDragging = false;
@@ -71,6 +73,7 @@ function captureRestAngles() {
 function applyIdleDrift() {
   if (!carRoot) return;
   const radius = camera.position.distanceTo(controls.target);
+  if (radius < 0.5) return;
   const azimuth = restAzimuth - pointerNDC.x * IDLE_MAX_AZIMUTH;
   const polar = THREE.MathUtils.clamp(
     restPolar - pointerNDC.y * IDLE_MAX_POLAR,
@@ -91,6 +94,9 @@ controls.addEventListener("start", () => {
 controls.addEventListener("end", () => {
   isDragging = false;
   captureRestAngles();
+});
+controls.addEventListener("change", () => {
+  if (!isDragging) captureRestAngles();
 });
 viewerEl.addEventListener("pointermove", (event) => {
   const rect = viewerEl.getBoundingClientRect();
@@ -121,9 +127,30 @@ function frameCameraFromDirection(direction) {
   const overhead = Math.abs(direction.y) > 0.9; // top/bottom need more room than side views
   const distance = maxDim * (overhead ? 1.95 : 1.65);
 
+  // Calibrate safe zoom boundaries to this specific car's dimensions
+  controls.minDistance = Math.max(1.0, maxDim * 0.36);
+  controls.maxDistance = maxDim * 3.5;
+
   camera.position.copy(center.clone().add(direction.clone().normalize().multiplyScalar(distance)));
   camera.lookAt(center);
   controls.target.copy(center);
+  controls.update();
+  captureRestAngles();
+}
+
+function zoomCamera(dir) {
+  if (!carRoot) return;
+  const target = controls.target;
+  const currentDist = camera.position.distanceTo(target);
+  const factor = dir > 0 ? 1.25 : 0.8;
+  const newDist = THREE.MathUtils.clamp(
+    currentDist * factor,
+    controls.minDistance,
+    controls.maxDistance
+  );
+
+  const offset = camera.position.clone().sub(target).normalize().multiplyScalar(newDist);
+  camera.position.copy(target.clone().add(offset));
   controls.update();
   captureRestAngles();
 }
@@ -199,6 +226,20 @@ function addViewPresetButtons() {
     btn.addEventListener("click", () => frameCameraFromDirection(VIEW_DIRECTIONS[name]));
     bar.appendChild(btn);
   });
+
+  const zoomInBtn = document.createElement("button");
+  zoomInBtn.className = "btn-zoom";
+  zoomInBtn.textContent = "+";
+  zoomInBtn.title = "Zoom In";
+  zoomInBtn.addEventListener("click", () => zoomCamera(-1));
+  bar.appendChild(zoomInBtn);
+
+  const zoomOutBtn = document.createElement("button");
+  zoomOutBtn.className = "btn-zoom";
+  zoomOutBtn.textContent = "−";
+  zoomOutBtn.title = "Zoom Out";
+  zoomOutBtn.addEventListener("click", () => zoomCamera(1));
+  bar.appendChild(zoomOutBtn);
 
   const snapBtn = document.createElement("button");
   snapBtn.className = "btn-snapshot";

@@ -58,6 +58,12 @@
   cursor: pointer;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
+.view-presets button.btn-zoom {
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1;
+  padding: 0.35rem 0.7rem;
+}
 .view-presets button:hover {
   color: var(--accent);
   border-color: var(--accent);
