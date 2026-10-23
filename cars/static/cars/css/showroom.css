@@ -20,7 +20,7 @@
   aspect-ratio: 6 / 5;
   border-radius: 20px;
   overflow: hidden;
-  background: radial-gradient(ellipse at 50% 80%, rgba(32, 31, 28, 0.09) 0%, rgba(32, 31, 28, 0) 62%), var(--bg);
+  background: radial-gradient(ellipse at 50% 80%, rgba(11, 131, 120, 0.18) 0%, rgba(11, 131, 120, 0) 62%), linear-gradient(160deg, #FAFCFD, #DCE7EF);
   will-change: transform, opacity;
 }
 .showroom-stage canvas {
@@ -44,7 +44,7 @@
   height: 7px;
   border-radius: 50%;
   background: var(--field-border);
-  opacity: 0.5;
+  opacity: 0.7;
   transition: opacity 0.25s ease, transform 0.25s ease, background 0.25s ease;
 }
 .showroom-dot.is-active { background: var(--accent-strong); opacity: 1; transform: scale(1.35); }
@@ -67,14 +67,14 @@
   flex-direction: column;
   justify-content: center;
   gap: 14px;
-  opacity: 0.3;
+  opacity: 0.6;
   transform: translateY(40px);
   transition: opacity 0.42s var(--ease-out), transform 0.42s var(--ease-out);
 }
 .showroom-entry.is-active { opacity: 1; transform: none; }
 
 .showroom-entry h1 {
-  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-family: "Manrope", system-ui, sans-serif;
   font-size: clamp(2.1rem, 1.5rem + 2.4vw, 3.25rem);
   font-weight: 500;
   letter-spacing: -0.02em;
@@ -103,7 +103,7 @@
 .showroom-entry .btn { width: fit-content; margin-top: 10px; }
 
 @media (max-width: 720px) {
-  .showroom { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; margin: -8px -20px -40px; }
+  .showroom { --nav-height: 88px; grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; margin: -8px -20px -40px; }
   .showroom-stage-wrap { padding: 12px 20px; }
   .showroom-stage { aspect-ratio: auto; height: 100%; }
   /* The mobile stage is a different shape (fills half the viewport height, not a 6:5 box), so
@@ -129,3 +129,11 @@
   .showroom-entry { transition: opacity 0.2s linear; transform: none; }
   .showroom-stage { transition: none !important; }
 }
+
+/* Dark theme: the studio floor darkens but keeps its teal spotlight. */
+html[data-theme="dark"] .showroom-stage {
+  background:
+    radial-gradient(ellipse at 50% 80%, rgba(79, 227, 209, 0.16) 0%, rgba(79, 227, 209, 0) 62%),
+    linear-gradient(160deg, #131F29, #0B141C);
+}
+

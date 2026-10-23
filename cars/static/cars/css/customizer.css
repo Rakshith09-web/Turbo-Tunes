@@ -21,7 +21,9 @@
   min-height: 420px;
   border-radius: 16px;
   overflow: hidden;
-  background: radial-gradient(ellipse at 50% 78%, rgba(32, 31, 28, 0.06) 0%, rgba(32, 31, 28, 0) 60%), var(--bg);
+  background:
+    radial-gradient(ellipse at 50% 78%, rgba(11, 131, 120, 0.2) 0%, rgba(11, 131, 120, 0) 64%),
+    linear-gradient(145deg, #EDF3F7, #CBD9E3);
 }
 
 #viewer {
@@ -34,9 +36,9 @@
   bottom: 18px;
   left: 20px;
   font-size: 11px;
-  color: var(--muted-strong);
+  color: #14202D;
   letter-spacing: 0.02em;
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(6px);
   padding: 4px 12px;
   border-radius: 999px;
@@ -46,9 +48,9 @@
 }
 
 .viewer-stage.midnight-mode .viewer-hint {
-  background: rgba(30, 41, 59, 0.85);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: #94a3b8;
+  background: rgba(8, 15, 25, 0.92);
+  border-color: rgba(69, 224, 208, 0.24);
+  color: #D5F7F3;
 }
 
 .view-presets {
@@ -83,12 +85,12 @@
   padding: 0.35rem 0.55rem;
 }
 .view-presets button:hover {
-  color: var(--accent);
+  color: var(--accent-strong);
   border-color: var(--accent);
 }
 .view-presets button.active {
   background: var(--accent);
-  color: #ffffff;
+  color: #FFFFFF;
   border-color: var(--accent);
 }
 
@@ -103,15 +105,20 @@
   gap: 14px;
 }
 
+/* Twelve paint colours now live in this row, so it wraps instead of running off the stage,
+   and its corners are rounded rather than fully pill-shaped (a wrapped pill reads oddly). */
 .toolbar-swatches {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 12px;
+  max-width: min(92vw, 640px);
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 24px;
   padding: 10px 20px;
-  box-shadow: 0 12px 32px rgba(32, 31, 28, 0.08);
+  box-shadow: 0 12px 32px rgba(16, 36, 56, 0.1);
 }
 .swatch-row-label {
   font-size: 12px;
@@ -156,7 +163,7 @@
 }
 .option-pill.selected {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-strong);
 }
 
 .toolbar-icons {
@@ -167,7 +174,7 @@
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 10px;
-  box-shadow: 0 14px 36px rgba(32, 31, 28, 0.08);
+  box-shadow: 0 14px 36px rgba(16, 36, 56, 0.1);
 }
 .toolbtn {
   display: flex;
@@ -205,14 +212,14 @@
   padding: 0.45rem 1rem;
   font-size: 12px;
   cursor: pointer;
-  box-shadow: 0 6px 18px rgba(198, 100, 30, 0.25);
+  box-shadow: 0 6px 18px rgba(10, 124, 114, 0.26);
   transition: opacity 0.15s ease;
 }
 .save-build-btn:hover { opacity: 0.9; }
 
 .toast-message {
-  background: var(--fg);
-  color: #FFFFFF;
+  background: var(--platinum);
+  color: #07151D;
   font-size: 12px;
   padding: 0.45rem 0.85rem;
   border-radius: 999px;
@@ -230,7 +237,7 @@
 /* Snapshot button in view presets */
 .view-presets button.btn-snapshot {
   background: var(--accent);
-  color: #ffffff;
+  color: #FFFFFF;
   border-color: var(--accent);
   font-weight: 500;
   display: inline-flex;
@@ -239,7 +246,7 @@
 }
 .view-presets button.btn-snapshot:hover {
   opacity: 0.9;
-  color: #ffffff;
+  color: #FFFFFF;
 }
 
 /* Right-side tools container (Turbo Sound on top, Ambience & Glow below) */
@@ -257,7 +264,7 @@
 
 /* Turbo Sound & Rev Simulator Console */
 .turbo-audio-bar {
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.93);
   backdrop-filter: blur(10px);
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -265,7 +272,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  box-shadow: 0 10px 28px rgba(32, 31, 28, 0.08);
+  box-shadow: 0 10px 28px rgba(16, 36, 56, 0.1);
   width: 100%;
   box-sizing: border-box;
 }
@@ -320,6 +327,7 @@
   min-height: 38px;
   border: 1px solid var(--border);
   background: var(--card-bg);
+  color: var(--muted-strong);
   border-radius: 8px;
   padding: 4px 6px;
   font-size: 11px;
@@ -344,12 +352,13 @@
 }
 .turbo-btn.btn-rev {
   background: var(--accent);
-  color: #ffffff;
+  color: #FFFFFF;
   border-color: var(--accent);
 }
 .turbo-btn.btn-rev:active:not(:disabled), .turbo-btn.btn-rev.revving {
   transform: scale(0.96);
-  background: #ea580c;
+  background: #086A62;
+  color: #FFFFFF;
 }
 
 .turbo-rpm-meter {
@@ -380,7 +389,7 @@
 
 /* Atmosphere & Lighting Control Console */
 .atmosphere-bar {
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.93);
   backdrop-filter: blur(10px);
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -388,7 +397,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  box-shadow: 0 10px 28px rgba(32, 31, 28, 0.08);
+  box-shadow: 0 10px 28px rgba(16, 36, 56, 0.1);
   width: 100%;
   box-sizing: border-box;
   transition: background 0.3s ease, border-color 0.3s ease;
@@ -420,6 +429,7 @@
   min-height: 38px;
   border: 1px solid var(--border);
   background: var(--card-bg);
+  color: var(--muted-strong);
   border-radius: 8px;
   padding: 4px 6px;
   font-size: 11px;
@@ -433,9 +443,9 @@
   border-color: var(--accent);
 }
 .atmo-btn.active {
-  background: #1e293b;
-  color: #38bdf8;
-  border-color: #38bdf8;
+  background: var(--accent);
+  color: #FFFFFF;
+  border-color: var(--accent);
 }
 
 .underglow-row {
@@ -469,7 +479,7 @@
   transform: scale(1.15);
 }
 .underglow-swatch.active {
-  border-color: #0f172a;
+  border-color: var(--accent);
   transform: scale(1.15);
   box-shadow: 0 0 10px currentColor;
 }
@@ -479,35 +489,83 @@
   position: relative;
 }
 .underglow-swatch-none.active {
-  border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.15);
+  border-color: #A93226;
+  background: rgba(169, 50, 38, 0.12);
 }
 
 /* Midnight Mode Styling for Stage and Panels */
 .viewer-stage.midnight-mode {
-  background: radial-gradient(ellipse at 50% 75%, #455268 0%, #2c3545 50%, #181f2a 85%) !important;
+  background: radial-gradient(ellipse at 50% 75%, #254E5B 0%, #142337 50%, #080F19 85%) !important;
 }
 .viewer-stage.midnight-mode .atmosphere-bar,
 .viewer-stage.midnight-mode .turbo-audio-bar {
-  background: rgba(15, 23, 42, 0.9);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: #f1f5f9;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  background: rgba(8, 15, 25, 0.94);
+  border-color: rgba(69, 224, 208, 0.22);
+  color: #E8F8FB;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32);
 }
 .viewer-stage.midnight-mode .atmosphere-header,
 .viewer-stage.midnight-mode .turbo-audio-header,
 .viewer-stage.midnight-mode .underglow-header,
 .viewer-stage.midnight-mode .turbo-rpm-text {
-  color: #94a3b8;
+  color: #A8D8D9;
 }
 .viewer-stage.midnight-mode .atmo-btn,
 .viewer-stage.midnight-mode .turbo-btn {
-  background: rgba(30, 41, 59, 0.85);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: #f1f5f9;
+  background: rgba(20, 35, 55, 0.94);
+  border-color: rgba(69, 224, 208, 0.22);
+  color: #E8F8FB;
 }
 .viewer-stage.midnight-mode .underglow-swatch.active {
   border-color: #ffffff;
 }
 
+/* ---- Dark theme ---------------------------------------------------------
+   The stage turns into a night studio, and the floating consoles follow it.
+   Midnight mode already has its own (even darker) treatment and keeps winning,
+   because those selectors are more specific. */
+html[data-theme="dark"] .viewer-stage {
+  background:
+    radial-gradient(ellipse at 50% 78%, rgba(79, 227, 209, 0.16) 0%, rgba(79, 227, 209, 0) 64%),
+    linear-gradient(145deg, #14212C, #0A131B);
+}
+html[data-theme="dark"] .viewer-hint {
+  background: rgba(10, 17, 24, 0.9);
+  color: #D5E3EE;
+  border-color: rgba(148, 169, 186, 0.22);
+}
+
+html[data-theme="dark"] .toolbar-swatches { box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5); }
+html[data-theme="dark"] .toolbar-icons { box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5); }
+
+html[data-theme="dark"] .turbo-audio-bar,
+html[data-theme="dark"] .atmosphere-bar {
+  background: rgba(14, 24, 33, 0.93);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+html[data-theme="dark"] .toast-message { color: #E9F2F8; }
+html[data-theme="dark"] .save-build-btn { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5); }
+html[data-theme="dark"] .turbo-btn.btn-ignite.running {
+  background: #3A1B1A;
+  border-color: #B4443D;
+  color: #FFB4AC;
+}
+
+/* White-on-teal controls keep a deep fill; bright teal stays for ink. */
+html[data-theme="dark"] .save-build-btn,
+html[data-theme="dark"] .toolbtn.active,
+html[data-theme="dark"] .atmo-btn.active,
+html[data-theme="dark"] .view-presets button.active,
+html[data-theme="dark"] .view-presets button.btn-snapshot,
+html[data-theme="dark"] .turbo-btn.btn-rev {
+  background: #0E7C72;
+  border-color: #0E7C72;
+  color: #FFFFFF;
+}
+
+/* The "engine live" badge keeps a deep green fill so its white label stays legible. */
+html[data-theme="dark"] .turbo-audio-badge.active {
+  background: #14663A;
+  color: #EAFBF0;
+}
 

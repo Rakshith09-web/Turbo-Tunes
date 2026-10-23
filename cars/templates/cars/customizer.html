@@ -17,8 +17,8 @@
   {% csrf_token %}
   <div class="viewer-stage">
     <div id="viewer"></div>
-    <div class="viewer-hint">Drag to rotate — move your cursor to look around</div>
+    <div class="viewer-hint">Drag to rotate</div>
     <div id="options-panel"></div>
   </div>
-  <script type="module" src="{% static 'cars/js/viewer.js' %}"></script>
+  <script type="module" src="{% static 'cars/js/viewer.js' %}?v=20261023b"></script>
 {% endblock %}

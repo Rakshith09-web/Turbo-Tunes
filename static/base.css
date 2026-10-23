@@ -1,23 +1,32 @@
 :root {
-  --bg: #F5F0E6;
-  --fg: #201F1C;
-  --muted: #8A867B;
-  --muted-strong: #55524A;
-  --accent: #C6641E;
-  --border: #E4DCC9;
+  /* Light "porcelain" canvas. The page used to sit on a mid-slate slab; every surface below
+     is now tuned for a pale background, so ink is deeper and shadows are cooler. */
+  --bg: #EAF1F7;
+  --fg: #0F2438;
+  --muted: #566D80;
+  --muted-strong: #31495E;
+  --accent: #0B8378;
+  --border: #D5E0EA;
   --card-bg: #FFFFFF;
+  --mocha: #D95B35;
+  --platinum: #E2EAF0;
+  --lavender: #7562B5;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
   background: var(--bg);
   color: var(--fg);
+  background-image:
+    radial-gradient(ellipse at 12% -20rem, rgba(11, 131, 120, 0.12), transparent 58%),
+    radial-gradient(ellipse at 92% 18%, rgba(117, 98, 181, 0.09), transparent 34%);
+  background-attachment: fixed;
 }
 
 h1, h2, .brand {
-  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-family: "Manrope", system-ui, sans-serif;
 }
 
 a { color: inherit; }
@@ -30,8 +39,11 @@ a { color: inherit; }
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   column-gap: 24px;
-  padding: 22px 48px;
-  background: var(--bg);
+  padding: 18px 48px;
+  background: rgba(255, 255, 255, 0.82);
+  border-bottom: 1px solid rgba(49, 73, 94, 0.12);
+  box-shadow: 0 10px 30px rgba(16, 36, 56, 0.06);
+  backdrop-filter: blur(18px) saturate(1.4);
 }
 .site-nav .brand {
   justify-self: start;
@@ -43,6 +55,17 @@ a { color: inherit; }
   color: var(--fg);
   text-decoration: none;
 }
+.site-nav .brand::before {
+  content: "";
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin: 0 10px 2px 0;
+  border-radius: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 14px rgba(11, 131, 120, 0.35);
+  transform: rotate(45deg);
+}
 .nav-links {
   justify-self: center;
   display: flex;
@@ -53,7 +76,7 @@ a { color: inherit; }
   color: var(--muted-strong);
   text-decoration: none;
   font-size: 14px;
-  transition: color 0.15s ease;
+  transition: color 0.15s ease, opacity 0.15s ease;
 }
 .nav-links a:hover { color: var(--accent); }
 
@@ -65,7 +88,7 @@ a { color: inherit; }
 }
 .logout-form { display: contents; }
 
-/* Nav auth pills: a solid dark primary action next to a lighter outlined secondary one. */
+/* Nav auth pills: a bright primary action next to a quiet outlined secondary one. */
 .btn-nav {
   display: inline-flex;
   align-items: center;
@@ -81,16 +104,39 @@ a { color: inherit; }
   transition: opacity 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .btn-nav-dark {
-  background: var(--fg);
-  color: var(--bg);
+  background: var(--accent);
+  color: #FFFFFF;
+  font-weight: 700;
 }
 .btn-nav-dark:hover { opacity: 0.82; }
 .btn-nav-light {
-  background: transparent;
+  background: #FFFFFF;
   color: var(--fg);
-  border-color: var(--field-border);
+  border-color: var(--border);
 }
 .btn-nav-light:hover { border-color: var(--accent-strong); color: var(--accent-strong); }
+
+/* Theme switch. Sits at the right edge of the nav; the icon shows the mode you
+   would switch *to* (moon while light, sun while dark). */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--muted-strong);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+.theme-toggle:hover { color: var(--accent-strong); border-color: var(--accent-strong); }
+.theme-toggle:active { transform: scale(0.94); }
+.theme-icon { display: none; }
+html:not([data-theme="dark"]) .theme-icon-moon { display: block; }
+html[data-theme="dark"] .theme-icon-sun { display: block; }
 
 main { padding: 8px 48px 48px; }
 
@@ -105,7 +151,7 @@ main { padding: 8px 48px 48px; }
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 8px 24px rgba(32, 31, 28, 0.05);
+  box-shadow: 0 8px 24px rgba(16, 36, 56, 0.07);
 }
 .car-card img { width: 100%; border-radius: 8px; display: block; }
 .car-card h2 { font-size: 18px; font-weight: 500; margin-top: 12px; }
@@ -119,23 +165,56 @@ main { padding: 8px 48px 48px; }
    ========================================================================== */
 
 :root {
-  /* Deeper shades of the same accent and muted tones, dark enough for small text. */
-  --accent-strong: #B0541A;
-  --accent-tint: #F6E4D3;
-  --text-soft: #6B675C;
-  --field-border: #9A927D;
-  --danger: #A93226;
-  --danger-tint: #F6DDD8;
-  --ok: #2F7D4F;
-  --ok-tint: #DCEBDD;
+  --accent-strong: #0A7C72;
+  --accent-tint: #D6EFEB;
+  --text-soft: #55697C;
+  --field-border: #C3D2DE;
+  --danger: #B83232;
+  --danger-tint: #FBE8E6;
+  --ok: #24734C;
+  --ok-tint: #E0F2E7;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* ==========================================================================
+   Dark theme. data-theme="dark" is stamped on <html> before first paint (see
+   base.html), so the whole site — nav, cards, forms, booking screens and the
+   3D stages — flips at once. Tokens carry the palette; only the rules that
+   still hard-code a light surface are overridden further down.
+   ========================================================================== */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Deep blue-slate canvas. Surfaces step up in small increments, so cards and
+     panels read as raised without going grey-on-grey. */
+  --bg: #0A1118;
+  --fg: #E9F2F8;
+  --muted: #94A9BA;
+  --muted-strong: #C3D4E1;
+  --accent: #4FE3D1;
+  --accent-strong: #38D9C5;
+  --border: #223342;
+  --card-bg: #111C26;
+  --mocha: #F0795A;
+  --platinum: #1A2833;
+  --lavender: #A18CE0;
+
+  --accent-tint: #103B39;
+  --text-soft: #9FB3C3;
+  --field-border: #2C4050;
+  --danger: #FF8A80;
+  --danger-tint: #3A1B1A;
+  --ok: #6BD9A5;
+  --ok-tint: #123526;
+}
+
 /* Browser surfaces that would otherwise keep their defaults. */
-::selection { background: #F0CDAE; color: var(--fg); }
-html { scrollbar-color: #C9BDA0 transparent; scrollbar-width: thin; }
+html { color-scheme: light; }
+html[data-theme="dark"] { color-scheme: dark; scrollbar-color: #33485A #0A1118; }
+::selection { background: var(--accent-strong); color: #FFFFFF; }
+html { scrollbar-color: #A9BDCC #EAF1F7; scrollbar-width: thin; }
 input, textarea, select { caret-color: var(--accent-strong); }
-:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 3px; }
 .tnum { font-variant-numeric: tabular-nums; }
 h1, h2, h3 { text-wrap: balance; }
 p { text-wrap: pretty; }
@@ -164,11 +243,11 @@ p { text-wrap: pretty; }
   transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s var(--ease-out);
 }
 .btn:active { transform: translateY(1px); }
-.btn-primary { background: var(--accent-strong); color: #fff; box-shadow: 0 8px 20px rgba(176, 84, 26, 0.22); }
-.btn-primary:hover { background: #9C4813; }
+.btn-primary { background: var(--accent-strong); color: #FFFFFF; font-weight: 700; box-shadow: 0 8px 24px rgba(10, 124, 114, 0.24); }
+.btn-primary:hover { background: #086A62; }
 .btn-quiet { background: var(--card-bg); color: var(--fg); border-color: var(--field-border); }
 .btn-quiet:hover { border-color: var(--accent-strong); color: var(--accent-strong); }
-.btn-danger { background: transparent; color: var(--danger); border-color: #D9A8A1; }
+.btn-danger { background: transparent; color: var(--danger); border-color: var(--danger); }
 .btn-danger:hover { background: var(--danger-tint); border-color: var(--danger); }
 .btn-block { width: 100%; }
 .btn[disabled] { opacity: 0.55; cursor: not-allowed; }
@@ -176,25 +255,25 @@ p { text-wrap: pretty; }
 /* Panels (one level only, never nested) */
 .panel {
   background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px;
-  box-shadow: 0 10px 28px rgba(32, 31, 28, 0.06); padding: clamp(20px, 3vw, 32px);
+  box-shadow: 0 18px 48px rgba(16, 36, 56, 0.09); padding: clamp(20px, 3vw, 32px);
 }
 
 /* Fields */
 .field { display: grid; gap: 7px; min-width: 0; border: 0; padding: 0; margin: 0; }
 .field > label, .field > legend { font-size: 13px; font-weight: 500; color: var(--muted-strong); padding: 0; }
 .input {
-  width: 100%; font: inherit; font-size: 15px; color: var(--fg); background: var(--card-bg);
+  width: 100%; font: inherit; font-size: 15px; color: var(--fg); background: #FFFFFF;
   border: 1px solid var(--field-border); border-radius: 12px; padding: 0.75rem 0.9rem;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 textarea.input { resize: vertical; min-height: 5.5rem; line-height: 1.5; }
-.input::placeholder { color: #767166; opacity: 1; }
-.input:hover { border-color: #7F7863; }
-.input:focus { outline: none; border-color: var(--accent-strong); box-shadow: 0 0 0 3px rgba(176, 84, 26, 0.18); }
+.input::placeholder { color: #60778A; opacity: 1; }
+.input:hover { border-color: var(--accent-strong); }
+.input:focus { outline: none; border-color: var(--accent-strong); box-shadow: 0 0 0 3px rgba(11, 131, 120, 0.18); }
 .has-error .input { border-color: var(--danger); }
 .hint { font-size: 13px; color: var(--text-soft); line-height: 1.45; }
 .field-error { font-size: 13px; color: var(--danger); line-height: 1.4; }
-.form-alert { background: var(--danger-tint); color: #7A2119; border-radius: 12px; padding: 0.8rem 1rem; font-size: 14px; line-height: 1.45; }
+.form-alert { background: var(--danger-tint); color: #782121; border: 1px solid rgba(184, 50, 50, 0.3); border-radius: 12px; padding: 0.8rem 1rem; font-size: 14px; line-height: 1.45; }
 .check { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--muted-strong); cursor: pointer; }
 .check input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--accent-strong); }
 input[type="date"].input { min-height: 3rem; }
@@ -211,15 +290,15 @@ input[type="date"].input { min-height: 3rem; }
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .pill:hover span { border-color: var(--accent-strong); }
-.pill input:checked + span { background: var(--accent-strong); border-color: var(--accent-strong); color: #fff; }
+.pill input:checked + span { background: var(--accent-strong); border-color: var(--accent-strong); color: #FFFFFF; }
 .pill input:focus-visible + span { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
 
 .swatch-choice span {
-  width: 34px; height: 34px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(32, 31, 28, 0.18);
+  width: 34px; height: 34px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(48, 37, 31, 0.18);
   transition: transform 0.18s var(--ease-out), box-shadow 0.18s ease;
 }
 .swatch-choice:hover span { transform: scale(1.08); }
-.swatch-choice input:checked + span { box-shadow: inset 0 0 0 1px rgba(32, 31, 28, 0.18), 0 0 0 2px var(--card-bg), 0 0 0 4px var(--accent-strong); }
+.swatch-choice input:checked + span { box-shadow: inset 0 0 0 1px rgba(48, 37, 31, 0.18), 0 0 0 2px var(--card-bg), 0 0 0 4px var(--accent-strong); }
 .swatch-choice input:focus-visible + span { outline: 2px solid var(--accent-strong); outline-offset: 5px; }
 
 .style-group { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -237,35 +316,102 @@ input[type="date"].input { min-height: 3rem; }
 /* Status pills. Text on tint, all above 4.5:1. */
 .status { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 500; padding: 0.3rem 0.75rem; border-radius: 999px; white-space: nowrap; }
 .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.status-pending { background: #F3E6CE; color: #7A4A0B; }
-.status-confirmed { background: #DCE6F5; color: #1F4283; }
-.status-in_progress { background: var(--accent-tint); color: #8A3F0F; }
-.status-completed { background: var(--ok-tint); color: #1F5C38; }
-.status-cancelled { background: #E9E5DA; color: #5A564C; }
+.status-pending { background: #FFF2D7; color: #754A00; }
+.status-confirmed { background: #E5F0FC; color: #204C7E; }
+.status-in_progress { background: var(--accent-tint); color: #075F58; }
+.status-completed { background: var(--ok-tint); color: #225B3C; }
+.status-cancelled { background: #E9EEF2; color: #485967; }
 
 /* Flash messages */
 .messages { display: grid; gap: 10px; margin: 4px 0 18px; padding: 0; list-style: none; }
 .flash {
   display: flex; align-items: flex-start; gap: 12px; padding: 0.85rem 1.1rem; font-size: 14px; line-height: 1.5;
   background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px;
-  box-shadow: 0 8px 22px rgba(32, 31, 28, 0.06);
+  box-shadow: 0 8px 22px rgba(16, 36, 56, 0.07);
 }
 .flash svg { flex: none; margin-top: 2px; }
 .flash-success svg { color: var(--ok); }
-.flash-error { background: var(--danger-tint); border-color: #E7BDB6; color: #7A2119; }
+.flash-error { background: var(--danger-tint); border-color: rgba(184, 50, 50, 0.3); color: #782121; }
 .flash-error svg { color: var(--danger); }
 
 /* Site navigation on small screens — the 3-column grid has no room to breathe, so it
    collapses to a wrapped row instead: brand, then links, then the auth pills. */
 @media (max-width: 720px) {
   .site-nav {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px 16px;
-    padding: 18px 20px 6px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px 14px;
+    padding: 12px 20px;
   }
-  .nav-links { justify-self: unset; flex-wrap: wrap; gap: 6px 18px; }
-  .nav-auth { justify-self: unset; }
+  .site-nav .brand { grid-column: 1; }
+  .nav-links { grid-column: 1 / -1; justify-self: start; flex-wrap: wrap; gap: 6px 18px; }
+  .nav-auth { grid-column: 2; grid-row: 1; }
+  .btn-nav { padding: 8px 14px; }
+  .theme-toggle { width: 34px; height: 34px; }
   main { padding: 8px 20px 40px; }
 }
+
+@media (max-width: 430px) {
+  /* The theme switch shares the top row, so tighten the brand and auth pills
+     enough to keep the wordmark on one line on a standard phone. */
+  .site-nav .brand { font-size: 17px; letter-spacing: 0.045em; }
+  .btn-nav { padding: 8px 10px; }
+  .nav-auth { gap: 8px; }
+}
+
+/* ==========================================================================
+   Dark theme — shared surfaces. Page-specific pieces (hero, showroom stage,
+   customizer) live at the bottom of their own stylesheets.
+   ========================================================================== */
+
+html[data-theme="dark"] body {
+  background-image:
+    radial-gradient(ellipse at 12% -20rem, rgba(79, 227, 209, 0.10), transparent 58%),
+    radial-gradient(ellipse at 92% 18%, rgba(161, 140, 224, 0.08), transparent 34%);
+}
+
+html[data-theme="dark"] ::selection { background: #0E7C72; color: #FFFFFF; }
+
+html[data-theme="dark"] .site-nav {
+  background: rgba(10, 17, 24, 0.82);
+  border-bottom-color: rgba(148, 169, 186, 0.14);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+html[data-theme="dark"] .site-nav .brand::before { box-shadow: 0 0 14px rgba(79, 227, 209, 0.45); }
+html[data-theme="dark"] .btn-nav-light { background: #16232E; color: var(--fg); }
+
+/* Bright teal is for ink and hairlines; white-on-teal controls keep a deep fill. */
+html[data-theme="dark"] .btn-nav-dark,
+html[data-theme="dark"] .btn-primary,
+html[data-theme="dark"] .pill input:checked + span {
+  background: #0E7C72;
+  border-color: #0E7C72;
+  color: #FFFFFF;
+}
+html[data-theme="dark"] .btn-primary { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); }
+html[data-theme="dark"] .btn-primary:hover { background: #0A6A61; }
+
+html[data-theme="dark"] .car-card { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); }
+html[data-theme="dark"] .panel { box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5); }
+
+html[data-theme="dark"] .input {
+  background: #0D1822;
+  color: var(--fg);
+}
+html[data-theme="dark"] .input::placeholder { color: #7C92A4; }
+html[data-theme="dark"] .input:focus { box-shadow: 0 0 0 3px rgba(79, 227, 209, 0.22); }
+
+html[data-theme="dark"] .form-alert,
+html[data-theme="dark"] .flash-error {
+  color: #FFB4AC;
+  border-color: rgba(255, 138, 128, 0.34);
+}
+html[data-theme="dark"] .flash { box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4); }
+
+/* Status pills: same hues, inverted tints so they stay legible on the dark canvas. */
+html[data-theme="dark"] .status-pending { background: #3A2C0D; color: #FFD98A; }
+html[data-theme="dark"] .status-confirmed { background: #13283F; color: #9CC9F5; }
+html[data-theme="dark"] .status-in_progress { background: var(--accent-tint); color: #7CEBDA; }
+html[data-theme="dark"] .status-completed { background: var(--ok-tint); color: #8CE9BB; }
+html[data-theme="dark"] .status-cancelled { background: #1B2733; color: #BECEDA; }
+

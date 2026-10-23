@@ -11,9 +11,10 @@ const CAR_AUDIO_PROFILES = {
     freqMult: 135,
     osc1Type: "sawtooth",
     osc2Type: "triangle",
-    filterFreqBase: 210,
-    filterFreqMult: 750,
+    filterFreqBase: 620,
+    filterFreqMult: 1500,
     filterQ: 2.4,
+    harmonicMult: 4,
     turboStartRpm: 2300,
     turboFreqBase: 900,
     turboFreqMult: 2300,
@@ -33,9 +34,10 @@ const CAR_AUDIO_PROFILES = {
     freqMult: 160,
     osc1Type: "sawtooth",
     osc2Type: "square", // Adds rich throaty muscle growl
-    filterFreqBase: 190,
-    filterFreqMult: 1050,
+    filterFreqBase: 700,
+    filterFreqMult: 1900,
     filterQ: 3.6,
+    harmonicMult: 4,
     turboStartRpm: 2000,
     turboFreqBase: 1100,
     turboFreqMult: 2700,
@@ -55,9 +57,10 @@ const CAR_AUDIO_PROFILES = {
     freqMult: 110,
     osc1Type: "triangle",
     osc2Type: "sawtooth",
-    filterFreqBase: 150,
-    filterFreqMult: 580,
+    filterFreqBase: 520,
+    filterFreqMult: 1200,
     filterQ: 2.1,
+    harmonicMult: 3,
     turboStartRpm: 1800,
     turboFreqBase: 680,
     turboFreqMult: 1900,
@@ -77,9 +80,10 @@ const CAR_AUDIO_PROFILES = {
     freqMult: 195,
     osc1Type: "sawtooth",
     osc2Type: "sawtooth", // Double sawtooth for raspy tuner note
-    filterFreqBase: 260,
-    filterFreqMult: 1400,
+    filterFreqBase: 780,
+    filterFreqMult: 2400,
     filterQ: 4.2, // Resonant exhaust snap
+    harmonicMult: 4,
     turboStartRpm: 2500,
     turboFreqBase: 1300,
     turboFreqMult: 3400,
@@ -99,9 +103,10 @@ const CAR_AUDIO_PROFILES = {
     freqMult: 480,
     osc1Type: "sine",
     osc2Type: "triangle", // Pure futuristic turbine tone
-    filterFreqBase: 650,
-    filterFreqMult: 3400,
+    filterFreqBase: 1000,
+    filterFreqMult: 4200,
     filterQ: 1.6,
+    harmonicMult: 2,
     turboStartRpm: 1200, // Immediate electric spool
     turboFreqBase: 1400,
     turboFreqMult: 5800, // Supersonic jet scream
@@ -143,6 +148,8 @@ class TurboAudioEngine {
     this.filter = null;
     this.osc1 = null;
     this.osc2 = null;
+    this.osc3 = null;
+    this.harmonicGain = null;
     this.turboOsc = null;
     this.isRevving = false;
     this.loopId = null;
@@ -172,6 +179,14 @@ class TurboAudioEngine {
     this.osc2.type = p.osc2Type;
     this.osc2.frequency.setValueAtTime(p.baseFreq * 1.5, this.ctx.currentTime);
 
+    // Higher harmonic layer so the engine is audible on laptop and phone speakers,
+    // which cannot reproduce the 30-80 Hz fundamentals of the other two oscillators.
+    this.osc3 = this.ctx.createOscillator();
+    this.osc3.type = "sawtooth";
+    this.osc3.frequency.setValueAtTime(p.baseFreq * p.harmonicMult, this.ctx.currentTime);
+    this.harmonicGain = this.ctx.createGain();
+    this.harmonicGain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+
     this.filter = this.ctx.createBiquadFilter();
     this.filter.type = "lowpass";
     this.filter.frequency.setValueAtTime(p.filterFreqBase, this.ctx.currentTime);
@@ -182,11 +197,14 @@ class TurboAudioEngine {
 
     this.osc1.connect(this.filter);
     this.osc2.connect(this.filter);
+    this.osc3.connect(this.harmonicGain);
+    this.harmonicGain.connect(this.filter);
     this.filter.connect(this.engineGain);
     this.engineGain.connect(this.masterGain);
 
     this.osc1.start();
     this.osc2.start();
+    this.osc3.start();
   }
 
   setupTurboNodes() {
@@ -304,6 +322,7 @@ class TurboAudioEngine {
     const baseFreq = p.baseFreq + ratio * p.freqMult;
     this.osc1.frequency.setTargetAtTime(baseFreq, this.ctx.currentTime, 0.04);
     this.osc2.frequency.setTargetAtTime(baseFreq * 1.5, this.ctx.currentTime, 0.04);
+    this.osc3.frequency.setTargetAtTime(baseFreq * p.harmonicMult, this.ctx.currentTime, 0.04);
 
     const filterFreq = p.filterFreqBase + ratio * p.filterFreqMult;
     this.filter.frequency.setTargetAtTime(filterFreq, this.ctx.currentTime, 0.04);

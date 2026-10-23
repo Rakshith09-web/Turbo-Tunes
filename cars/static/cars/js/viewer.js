@@ -3,7 +3,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DecalGeometry } from "three/addons/geometries/DecalGeometry.js";
 import { createPalettePainter } from "./palette.js";
-import { TurboAudioEngine } from "./turbo_audio.js";
+import { TurboAudioEngine } from "./turbo_audio.js?v=20261023b";
 
 const carData = JSON.parse(document.getElementById("car-data").textContent);
 const viewerEl = document.getElementById("viewer");
@@ -57,58 +57,6 @@ controls.screenSpacePanning = true;
 // Safe zoom boundaries to prevent disappearing geometry or inversion
 controls.minDistance = 1.2;
 controls.maxDistance = 18.0;
-
-// Idle cursor drift: when the user isn't actively dragging, the camera gently
-// leans toward the cursor around a "rest" angle.
-const IDLE_MAX_AZIMUTH = THREE.MathUtils.degToRad(10);
-const IDLE_MAX_POLAR = THREE.MathUtils.degToRad(6);
-let isDragging = false;
-let restAzimuth = 0;
-let restPolar = Math.PI / 2;
-const pointerNDC = { x: 0, y: 0 };
-
-function captureRestAngles() {
-  restAzimuth = controls.getAzimuthalAngle();
-  restPolar = controls.getPolarAngle();
-}
-
-function applyIdleDrift() {
-  if (!carRoot) return;
-  const radius = camera.position.distanceTo(controls.target);
-  if (radius < 0.5) return;
-  const azimuth = restAzimuth - pointerNDC.x * IDLE_MAX_AZIMUTH;
-  const polar = THREE.MathUtils.clamp(
-    restPolar - pointerNDC.y * IDLE_MAX_POLAR,
-    0.15,
-    Math.PI - 0.15
-  );
-  const offset = new THREE.Vector3().setFromSpherical(
-    new THREE.Spherical(radius, polar, azimuth)
-  );
-  const desired = controls.target.clone().add(offset);
-  camera.position.lerp(desired, 0.06);
-  camera.lookAt(controls.target);
-}
-
-controls.addEventListener("start", () => {
-  isDragging = true;
-});
-controls.addEventListener("end", () => {
-  isDragging = false;
-  captureRestAngles();
-});
-controls.addEventListener("change", () => {
-  if (!isDragging) captureRestAngles();
-});
-viewerEl.addEventListener("pointermove", (event) => {
-  const rect = viewerEl.getBoundingClientRect();
-  pointerNDC.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-  pointerNDC.y = ((event.clientY - rect.top) / rect.height) * 2 - 1;
-});
-viewerEl.addEventListener("pointerleave", () => {
-  pointerNDC.x = 0;
-  pointerNDC.y = 0;
-});
 
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
 scene.add(ambientLight);
@@ -241,7 +189,6 @@ function frameCameraFromDirection(direction) {
   camera.lookAt(center);
   controls.target.copy(center);
   controls.update();
-  captureRestAngles();
 }
 
 function zoomCamera(dir) {
@@ -279,7 +226,6 @@ function zoomCamera(dir) {
   offset.normalize().multiplyScalar(newDist);
   camera.position.copy(target.clone().add(offset));
   controls.update();
-  captureRestAngles();
 }
 
 const focusRaycaster = new THREE.Raycaster();
@@ -320,7 +266,6 @@ function updateFocusTween() {
   if (t >= 1.0) {
     focusTween.active = false;
     controls.update();
-    captureRestAngles();
   }
 }
 
@@ -732,44 +677,244 @@ async function applyWheels(option) {
 }
 
 // ---- Exhaust -----------------------------------------------------------------------------
+// These scanned cars carry no exhaust parts of their own, so the tips are generated in code
+// from the car's own body: a slim flared sleeve with a polished bezel, a dark inner bore and
+// a matte heat-shield collar where it meets the bumper.
+//
+// Everything generated here is named "Generated*" so it can be told apart from the car's own
+// geometry — that matters below, because the anchor must ignore it.
+function isGeneratedPart(object) {
+  let node = object;
+  while (node && node !== carRoot) {
+    if (/^Generated/i.test(node.name)) return true;
+    node = node.parent;
+  }
+  return false;
+}
+
+// A pocket-sized studio for the tip metal. The scene has no image-based lighting of its own,
+// and a metal with nothing to reflect renders as a flat dark shape with one hot specular dot
+// — which is what made the old chrome tips look like grey plastic. A soft sky-over-floor
+// gradient plus two light panels gives the metal something to pick up, so the tips read as
+// brushed steel that curves away into shadow.
+let exhaustEnvironment = null;
+function exhaustEnvMap() {
+  if (exhaustEnvironment) return exhaustEnvironment;
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 128;
+  const ctx = canvas.getContext("2d");
+  const sky = ctx.createLinearGradient(0, 0, 0, 128);
+  sky.addColorStop(0.0, "#e6edf5");
+  sky.addColorStop(0.42, "#fafcfe");
+  sky.addColorStop(0.5, "#b4bdc6");
+  sky.addColorStop(0.64, "#666c73");
+  sky.addColorStop(1.0, "#282c31");
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, 256, 128);
+  // Two soft boxes, so the highlight travels along the curve of the tip.
+  ctx.fillStyle = "rgba(255,255,255,0.92)";
+  ctx.fillRect(22, 10, 78, 20);
+  ctx.fillStyle = "rgba(255,255,255,0.6)";
+  ctx.fillRect(158, 4, 64, 14);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.mapping = THREE.EquirectangularReflectionMapping;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  exhaustEnvironment = pmrem.fromEquirectangular(texture).texture;
+  pmrem.dispose();
+  texture.dispose();
+  return exhaustEnvironment;
+}
+
+// The tip finishes. Dark, satin body with a bright machined bezel at the mouth: the bezel is
+// what makes a small dark tip read as an exhaust tip instead of a blob, because it draws a
+// crisp bright line right where the eye expects the opening to be.
+function exhaustMaterials() {
+  const env = exhaustEnvMap();
+  return {
+    shell: new THREE.MeshStandardMaterial({
+      color: 0x1d2025, metalness: 0.68, roughness: 0.36, envMap: env, envMapIntensity: 1.1,
+    }),
+    bezel: new THREE.MeshStandardMaterial({
+      color: 0xd2d8de, metalness: 0.55, roughness: 0.2, envMap: env, envMapIntensity: 1.4,
+    }),
+    inner: new THREE.MeshStandardMaterial({
+      color: 0x101216, metalness: 0.45, roughness: 0.55, side: THREE.BackSide,
+      envMap: env, envMapIntensity: 0.35,
+    }),
+    bore: new THREE.MeshStandardMaterial({ color: 0x040506, metalness: 0.05, roughness: 0.95 }),
+    collar: new THREE.MeshStandardMaterial({
+      color: 0x0b0d10, metalness: 0.3, roughness: 0.75, envMap: env, envMapIntensity: 0.35,
+    }),
+  };
+}
+
+// The rear-most body surface within a horizontal band around the exhaust height, optionally
+// restricted to a slice of the car's width. Bounding boxes can't answer this: these models
+// are merged (one mesh named "Hood" spans the whole car, roof to bumper), so a box says
+// nothing about *where* along the car its rear edge is, and the whole-car box would pick the
+// roof edge or a spoiler overhang instead of the bumper. Walking the actual vertices does
+// answer it.
+function rearAnchorAtHeight(yMin, yMax, x = null, xWindow = Infinity) {
+  let bestZ = Infinity;
+  const point = new THREE.Vector3();
+  carRoot.updateMatrixWorld(true);
+  carRoot.traverse((child) => {
+    if (!child.isMesh || isGeneratedPart(child)) return;
+    const position = child.geometry?.attributes?.position;
+    if (!position) return;
+    for (let i = 0; i < position.count; i++) {
+      point.fromBufferAttribute(position, i).applyMatrix4(child.matrixWorld);
+      if (point.y < yMin || point.y > yMax) continue;
+      if (x !== null && Math.abs(point.x - x) > xWindow) continue;
+      if (point.z < bestZ) bestZ = point.z;
+    }
+  });
+  return bestZ;
+}
+
+// The body's own bounding box (its lowest point is where the tyres meet the road, so heights
+// can be measured from the ground) plus the rear anchor for the tips.
+function bodyAnchors() {
+  const box = new THREE.Box3();
+  carRoot.traverse((child) => {
+    if (!child.isMesh || isGeneratedPart(child)) return;
+    box.union(new THREE.Box3().setFromObject(child));
+  });
+  if (box.isEmpty()) {
+    const fallback = new THREE.Box3().setFromObject(carRoot);
+    return { box: fallback, rearZ: fallback.min.z };
+  }
+  const height = box.max.y - box.min.y;
+  const exhaustY = box.min.y + height * 0.24; // where a real exhaust sits
+  // Look for the rear-most bodywork in the band around that height: that is the bumper the
+  // tips belong to, whatever the car's roof or spoiler does above it.
+  let rearZ = rearAnchorAtHeight(exhaustY - height * 0.12, exhaustY + height * 0.26);
+  if (!Number.isFinite(rearZ)) rearZ = box.min.z;
+  return { box, rearZ };
+}
+
 // Options named "generated:<style>" are built in code (the free models have no exhaust parts).
 function buildExhaust(style) {
-  const box = new THREE.Box3().setFromObject(carRoot);
+  const { box } = bodyAnchors();
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
-  const tipRadius = style === "dual" ? size.x * 0.05 : size.x * 0.06;
-  const xOffsets = style === "dual" ? [-size.x * 0.24, size.x * 0.24] : [size.x * 0.24];
+
+  const dual = style === "dual";
+  const single = style === "single";
+  const stock = !dual && !single;
+
+  // A real tailpipe is ~11 cm across and sticks out 6-9 cm. The old geometry was a third
+  // wider and pushed halfway out of the bumper, which read as a truck pipe.
+  const tipRadius = size.x * (dual ? 0.030 : single ? 0.030 : 0.014);
+  const visible = size.z * (dual ? 0.018 : single ? 0.020 : 0.008); // proud of the bumper
+  const buried = visible * 1.25; // reaching back into the bumper
+  const mountY = box.min.y + size.y * (stock ? 0.235 : 0.26);
+  // Twin tips sit inboard of the corners — that is where a diffuser puts them, and it keeps
+  // them on the flat part of the bumper instead of on the curve. A single tip uses the same
+  // offset on the left-hand side (left as you look at the back of the car), so it lines up
+  // exactly where that tip of the pair sits.
+  const tipOffset = size.x * 0.17;
+  const offsets = stock ? [0] : dual ? [-tipOffset, tipOffset] : [tipOffset];
 
   const group = new THREE.Group();
   group.name = "GeneratedExhaust";
-  const metal = new THREE.MeshStandardMaterial({ color: 0xdfe2e8, metalness: 0.7, roughness: 0.3 });
-  const dark = new THREE.MeshStandardMaterial({ color: 0x0c0c0e });
+  const mats = exhaustMaterials();
 
-  xOffsets.forEach((dx) => {
-    const tube = new THREE.Mesh(
-      new THREE.CylinderGeometry(tipRadius, tipRadius, size.z * 0.05, 20, 1, true),
-      metal
-    );
-    tube.material.side = THREE.DoubleSide;
-    const hole = new THREE.Mesh(new THREE.CircleGeometry(tipRadius * 0.85, 20), dark);
-    hole.rotation.y = Math.PI;
-    hole.position.z = size.z * 0.02;
+  offsets.forEach((dx) => {
     const tip = new THREE.Group();
-    tip.add(tube, hole);
-    tube.rotation.x = Math.PI / 2;
-    tip.position.set(center.x + dx, box.min.y + size.y * 0.26, box.min.z + size.z * 0.005);
+    const tipX = center.x + dx;
+
+    // Anchor each tip to the bodywork at *its own* width: the bumper sweeps forward towards
+    // the corners, so one rear-most point for the whole car would leave the outer tip
+    // hanging in the air or buried inside the wing.
+    const band = size.y * 0.17;
+    let surfaceZ = rearAnchorAtHeight(mountY - band * 0.55, mountY + band, tipX, size.x * 0.09);
+    if (!Number.isFinite(surfaceZ)) surfaceZ = box.min.z;
+
+    // Local frame: z = 0 is the mouth of the tip, +z runs back into the bumper.
+    const shellLength = visible + buried;
+    const shell = new THREE.Mesh(
+      new THREE.CylinderGeometry(tipRadius * 0.9, tipRadius, shellLength, 28, 1, true),
+      mats.shell
+    );
+    shell.rotation.x = Math.PI / 2;
+    shell.position.z = shellLength / 2;
+    tip.add(shell);
+
+    if (stock) {
+      // The factory pipe: a plain dark tube, no bright bezel. The cap is sized to meet the
+      // sleeve's inner wall so you cannot see straight through the pipe.
+      const cap = new THREE.Mesh(new THREE.CircleGeometry(tipRadius * 0.98, 20), mats.bore);
+      cap.rotation.y = Math.PI;
+      cap.position.z = visible * 0.25;
+      tip.add(cap);
+    } else {
+      // Machined bezel around the mouth — the bright ring that defines the opening.
+      const bezel = new THREE.Mesh(
+        new THREE.TorusGeometry(tipRadius * 0.94, tipRadius * 0.09, 10, 30),
+        mats.bezel
+      );
+      bezel.position.z = 0;
+      tip.add(bezel);
+
+      // Recessed bore: the inner wall is visible a little way down the pipe, so the opening
+      // reads as a hole with depth instead of a black disc stuck on the end.
+      const bore = new THREE.Mesh(
+        new THREE.CylinderGeometry(tipRadius * 0.8, tipRadius * 0.8, visible * 0.85, 24, 1, true),
+        mats.inner
+      );
+      bore.rotation.x = Math.PI / 2;
+      bore.position.z = visible * 0.42;
+      tip.add(bore);
+
+      const cap = new THREE.Mesh(new THREE.CircleGeometry(tipRadius * 0.8, 24), mats.bore);
+      cap.rotation.y = Math.PI;
+      cap.position.z = visible * 0.84;
+      tip.add(cap);
+    }
+
+    // Matte heat shield where the tip leaves the bumper: a dark collar stops the bright
+    // sleeve from looking pasted on top of the bodywork. It sits behind the mouth, so the
+    // polished bezel stays the widest, most visible part of the tip.
+    const collar = new THREE.Mesh(
+      new THREE.CylinderGeometry(tipRadius * 1.02, tipRadius * 1.02, buried * 0.9, 24, 1, true),
+      mats.collar
+    );
+    collar.rotation.x = Math.PI / 2;
+    collar.position.z = visible * 0.8 + buried * 0.45;
+    tip.add(collar);
+
+    tip.position.set(tipX, mountY, surfaceZ - visible);
     group.add(tip);
   });
   return group;
+}
+
+// Generated parts are rebuilt from scratch on every click — drop the old geometry and
+// materials instead of leaking them.
+function disposeGenerated(group) {
+  group.traverse((child) => {
+    if (!child.isMesh) return;
+    child.geometry?.dispose();
+    if (Array.isArray(child.material)) child.material.forEach((material) => material.dispose());
+    else child.material?.dispose();
+  });
 }
 
 function applyExhaust(option) {
   if (!option.mesh_name.startsWith("generated:")) return showOnly(option);
 
   const existing = carRoot.getObjectByName("GeneratedExhaust");
-  if (existing) carRoot.remove(existing);
+  if (existing) {
+    disposeGenerated(existing);
+    carRoot.remove(existing);
+  }
   const style = option.mesh_name.split(":")[1];
-  if (style !== "none") carRoot.add(buildExhaust(style));
+  // "none" is the factory pipe: a small dark stub, not a bare bumper with nothing coming out
+  // of it (these models carry no exhaust of their own).
+  carRoot.add(buildExhaust(style));
   return true;
 }
 
@@ -779,7 +924,9 @@ function applyExhaust(option) {
 // on these scanned cars, a real spoiler is either fused into the body as one continuous
 // surface with no separate part to target, or, like the sedan, isn't modelled at all).
 function buildSpoiler(hex) {
-  const box = new THREE.Box3().setFromObject(carRoot);
+  // Anchored to the body only — the car's own box would include a generated exhaust, whose
+  // tips stick out past the rear and would drag the wing backwards with them.
+  const box = bodyAnchors().box;
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
 
@@ -821,7 +968,10 @@ function applySpoiler(option) {
     // the body as one continuous surface with nothing separate to grab, like the sports
     // sedan's fixed wing) — build one instead.
     const existing = carRoot.getObjectByName("GeneratedSpoiler");
-    if (existing) carRoot.remove(existing);
+    if (existing) {
+      disposeGenerated(existing);
+      carRoot.remove(existing);
+    }
     if (option.color_hex) carRoot.add(buildSpoiler(option.color_hex));
     return true;
   }
@@ -1450,7 +1600,6 @@ function animate() {
   if (!focusTween.active) {
     updateSafeZoomLimits();
     controls.update();
-    if (!isDragging && !isInteriorMode) applyIdleDrift();
   } else {
     updateFocusTween();
   }

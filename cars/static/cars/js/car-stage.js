@@ -7,18 +7,23 @@ import { createPalettePainter } from "./palette.js";
 // Used by the booking form (which swaps styles and colours as the customer chooses), by the
 // request page (one car in the colour that was booked) and by the All Cars showroom.
 // `distance` is how far the camera sits, as a multiple of the car's largest dimension.
-export function createCarStage(container, { distance: distanceFactor = 1.8, interactive = true, autoRotateSpeed = 1.6 } = {}) {
+export function createCarStage(container, { distance: distanceFactor = 1.8, interactive = true, autoRotateSpeed = 1.6, lightBoost = 1 } = {}) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(38, 4 / 3, 0.1, 100);
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   container.appendChild(renderer.domElement);
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xd9d2c0, 0.75));
-  const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55 * lightBoost));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xd9d2c0, 0.75 * lightBoost));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.2 * lightBoost);
   keyLight.position.set(5, 10, 7);
   scene.add(keyLight);
+  if (lightBoost > 1) {
+    const fillLight = new THREE.DirectionalLight(0xa9e8f2, 1.1 * (lightBoost - 1));
+    fillLight.position.set(-6, 4, -5);
+    scene.add(fillLight);
+  }
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enablePan = false;

@@ -2,7 +2,6 @@
 {% load static %}
 {% block title %}Turbo Tunes{% endblock %}
 {% block extra_head %}
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{% static 'cars/css/home.css' %}" />
   {% if hero_data %}{% include "includes/three_importmap.html" %}{% endif %}
 {% endblock %}
@@ -12,19 +11,31 @@
       {{ hero_data|json_script:"hero-car-data" }}
       <div id="home-hero-stage" class="home-hero-stage" aria-hidden="true"></div>
     {% endif %}
+    <div class="home-hero-orbit" aria-hidden="true"></div>
+    <div class="hero-tech-card" aria-hidden="true">
+      <small>BUILD STATUS</small>
+      <strong>Made to be yours</strong>
+      <span>LIVE IN 3D</span>
+    </div>
 
     <div class="home-hero-content">
+      <p class="home-hero-kicker"><span class="hero-kicker-dot"></span> THE DIGITAL GARAGE</p>
       <h1>Turbo Tunes</h1>
       <p class="home-hero-tagline">Design your car. Down to the last detail.</p>
-      <p class="home-hero-lede">Real-time 3D customization, saved builds, and service booking — all in one place.</p>
+      <p class="home-hero-lede">Build your dream machine in 3D, save it to your garage, and keep your real ride road-ready.</p>
+      <div class="home-hero-details" aria-label="Explore the digital garage">
+        <span>Choose your ride</span>
+        <span>Make it yours</span>
+      </div>
     </div>
 
     <a class="home-hero-cta" href="{% url 'car_gallery' %}">
       <span class="home-hero-cta-icon">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15M12 19l-6-6M12 19l6-6" /></svg>
       </span>
-      Explore All Cars
+      <span class="home-hero-cta-copy"><strong>Explore the collection</strong><small>Find your next build</small></span>
     </a>
+    <p class="home-hero-preview"><span></span> LIVE 3D PREVIEW <i>DRAG TO DISCOVER</i></p>
   </section>
 
   <section class="home-features">
@@ -32,7 +43,8 @@
       <span class="feature-icon">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" /></svg>
       </span>
-      <h2>Customize every detail</h2>
+      <p class="feature-index">01 / BUILD</p>
+      <h2>Make it unmistakably yours</h2>
       <p>Change the paint, wheels, exhaust and decals on any car in the lineup — sedans, SUVs, hatchbacks and
         more — and watch it update instantly in 3D, from any angle.</p>
     </article>
@@ -41,7 +53,8 @@
       <span class="feature-icon">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1Z" /></svg>
       </span>
-      <h2>Save your build</h2>
+      <p class="feature-index">02 / KEEP</p>
+      <h2>Your garage, always open</h2>
       <p>Found a look you love? Save it to <strong>My Garage</strong> and pick up right where you left off,
         any time you come back.</p>
     </article>
@@ -50,14 +63,16 @@
       <span class="feature-icon">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 1-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 1 5.4-5.4L15 12l-3-3 2.7-2.7Z" /></svg>
       </span>
-      <h2>Book a service</h2>
+      <p class="feature-index">03 / CARE</p>
+      <h2>Good cars deserve good care</h2>
       <p>When your own car needs work, a mechanic comes to you. Choose a service, a time, and we'll take it
         from there — track the whole request in My Requests.</p>
     </article>
   </section>
 
   <section class="home-close reveal">
-    <h2>Ready to see it in 3D?</h2>
+    <p class="home-close-kicker">YOUR NEXT BUILD IS WAITING</p>
+    <h2>Ready to take the wheel?</h2>
     <div class="home-close-actions">
       <a class="btn btn-primary btn-lg" href="{% url 'car_gallery' %}">Explore All Cars</a>
       <a class="btn btn-quiet btn-lg" href="{% url 'book_service' %}">Book a Service</a>

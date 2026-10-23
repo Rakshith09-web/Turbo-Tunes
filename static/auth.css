@@ -17,13 +17,21 @@
   padding: 32px;
   overflow: hidden;
   border-radius: 24px;
-  background: radial-gradient(ellipse at 50% 62%, rgba(32, 31, 28, 0.09) 0%, rgba(32, 31, 28, 0) 62%), #EFE7D6;
+  background:
+    radial-gradient(ellipse at 50% 62%, rgba(11, 131, 120, 0.16) 0%, rgba(11, 131, 120, 0) 62%),
+    linear-gradient(145deg, #FFFFFF, #E7F0F7);
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 48px rgba(16, 36, 56, 0.1);
 }
-/* The captured thumbnail has the page's cream behind the car; "darken" lets the
-   panel's own tone show through and keeps the car itself untouched. */
-.auth-stage img { width: min(100%, 540px); mix-blend-mode: darken; }
+/* The captured thumbnail carries its own warm backdrop. Blending it away only worked
+   against the old slate panel, so on the light theme it is framed as a photo card. */
+.auth-stage img {
+  width: min(100%, 540px);
+  border-radius: 18px;
+  box-shadow: 0 20px 44px rgba(16, 36, 56, 0.18);
+}
 .auth-stage-line {
-  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-family: "Manrope", system-ui, sans-serif;
   font-size: clamp(1.4rem, 1rem + 1.3vw, 2rem);
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -38,8 +46,8 @@
 .auth-form { display: grid; gap: 18px; margin-top: 26px; }
 .auth-form .btn { margin-top: 6px; padding-block: 0.95rem; }
 .auth-alt { margin-top: 22px; font-size: 14px; color: var(--text-soft); }
-.auth-alt a { color: var(--accent-strong); font-weight: 500; text-underline-offset: 3px; }
-.auth-alt a:hover { color: #8A3F0F; }
+.auth-alt a { color: var(--accent-strong); font-weight: 600; text-underline-offset: 3px; }
+.auth-alt a:hover { color: #00665D; }
 
 @media (max-width: 860px) {
   .auth { grid-template-columns: 1fr; margin-top: 4px; }
@@ -47,3 +55,15 @@
   .auth-stage { order: 2; min-height: 0; padding: 24px; }
   .auth-stage img { width: min(100%, 360px); }
 }
+
+/* Dark theme: the stage becomes a deep studio panel; the captured car photo keeps
+   its own warm backdrop and reads as a lit card. */
+html[data-theme="dark"] .auth-stage {
+  background:
+    radial-gradient(ellipse at 50% 62%, rgba(79, 227, 209, 0.14) 0%, rgba(79, 227, 209, 0) 62%),
+    linear-gradient(145deg, #131F29, #0B141C);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5);
+}
+html[data-theme="dark"] .auth-stage img { box-shadow: 0 20px 44px rgba(0, 0, 0, 0.6); }
+html[data-theme="dark"] .auth-alt a:hover { color: var(--accent); }
+

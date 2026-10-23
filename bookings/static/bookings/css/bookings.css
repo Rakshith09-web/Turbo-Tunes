@@ -21,7 +21,7 @@
   aspect-ratio: 4 / 3;
   border-radius: 14px;
   overflow: hidden;
-  background: radial-gradient(ellipse at 50% 80%, rgba(32, 31, 28, 0.09) 0%, rgba(32, 31, 28, 0) 62%), var(--bg);
+  background: radial-gradient(ellipse at 50% 80%, rgba(11, 131, 120, 0.18) 0%, rgba(11, 131, 120, 0) 62%), linear-gradient(160deg, #FAFCFD, #DCE7EF);
   cursor: grab;
 }
 .car-preview:active { cursor: grabbing; }
@@ -47,13 +47,13 @@
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(32, 31, 28, 0.04);
+  box-shadow: 0 6px 18px rgba(16, 36, 56, 0.06);
   transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s var(--ease-out);
 }
-.request-row:hover { border-color: #D2C6AA; box-shadow: 0 12px 28px rgba(32, 31, 28, 0.08); transform: translateY(-1px); }
+.request-row:hover { border-color: var(--accent-strong); box-shadow: 0 12px 28px rgba(10, 124, 114, 0.16); transform: translateY(-1px); }
 .request-thumb { width: 96px; aspect-ratio: 8 / 5; object-fit: cover; border-radius: 10px; background: var(--bg); }
 .request-main { display: grid; gap: 3px; min-width: 0; }
-.request-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 1.05rem; font-weight: 500; }
+.request-title { font-family: "Manrope", system-ui, sans-serif; font-size: 1.05rem; font-weight: 600; }
 .request-sub { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 14px; color: var(--text-soft); }
 .request-sub .text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .request-sub .dot { flex: none; }
@@ -78,7 +78,7 @@ img.detail-car { width: 100%; aspect-ratio: 8 / 5; object-fit: cover; border-rad
 .car-preview > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .car-preview.is-live > img { display: none; }
 .detail-color { display: flex; align-items: center; gap: 10px; margin: 12px 0 22px; font-size: 14px; color: var(--muted-strong); }
-.dot { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(32, 31, 28, 0.2); }
+.dot { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(48, 37, 31, 0.2); }
 
 .track { display: grid; gap: 0; margin: 0 0 24px; padding: 0; list-style: none; }
 .track li { position: relative; padding: 0 0 18px 30px; font-size: 14px; color: var(--text-soft); }
@@ -113,3 +113,13 @@ img.detail-car { width: 100%; aspect-ratio: 8 / 5; object-fit: cover; border-rad
   .detail-list > div { grid-template-columns: 1fr; gap: 4px; }
   .style-group { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* ---- Dark theme --------------------------------------------------------- */
+html[data-theme="dark"] .car-preview {
+  background:
+    radial-gradient(ellipse at 50% 80%, rgba(79, 227, 209, 0.16) 0%, rgba(79, 227, 209, 0) 62%),
+    linear-gradient(160deg, #131F29, #0B141C);
+}
+html[data-theme="dark"] .request-row { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); }
+html[data-theme="dark"] .request-row:hover { box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55); }
+

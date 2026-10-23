@@ -21,6 +21,7 @@ if (heroDataEl) {
     distance: isNarrow ? 4.2 : 2.6,
     interactive: false,
     autoRotateSpeed: 1.1,
+    lightBoost: 1.8,
   });
   stage.showStyle(heroCar).then((shown) => {
     if (shown && heroCar.paintMode === "palette") stage.setColor("#3A3B40"); // graphite, a premium hero shade

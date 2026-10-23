@@ -81,6 +81,14 @@ PAINTS = [
     ("Forest Green", "#2F7D4F"),
     ("Pearl White", "#EFEDE6"),
     ("Graphite", "#3A3B40"),
+    # A second, cooler set. "tint" paint flattens the body to one colour with no texture, so
+    # mid-tones read best — very light shades lose their panel lines, very dark ones go flat.
+    ("Teal Metallic", "#0E7C86"),
+    ("Burgundy", "#6E1B2E"),
+    ("Champagne Silver", "#C9CDD2"),
+    ("Nardo Grey", "#8A9096"),
+    ("Sunset Yellow", "#E3A72F"),
+    ("Matte Black", "#1B1D21"),
 ]
 
 # Real wheel finishes rather than body-paint colours.
