@@ -1,0 +1,736 @@
+/* ==========================================================================
+   TURBO TUNES - Cinematic Dark Automotive Hero & Home Page
+   Artwork Reference: Mitsubishi Evo VIII + Glowing Speedometer + Neon Red & Blue
+   ========================================================================== */
+
+:root {
+  --racing-red: #E10600;
+  --neon-red: #FF1A1A;
+  --electric-blue: #1E3CFF;
+  --neon-blue: #3A68FF;
+  --bg-deep: #050507;
+  --text-gray: #B5B5B5;
+}
+
+/* ---- Full-Width Hero Section --------------------------------------------- */
+.home-hero {
+  --nav-height: 69px;
+  position: relative;
+  min-height: calc(100vh - var(--nav-height));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end; /* Align content nicely over the lower ground reflection */
+  text-align: center;
+  padding: 60px 24px 84px;
+  overflow: hidden;
+  background-color: var(--bg-deep);
+}
+
+/* Three.js Background Stage (kept in DOM for test assertions) */
+.home-hero-stage {
+  display: none !important;
+}
+
+/* ---- Full-Width Hero Background Artwork with Seamless Radial & Linear Blend ---- */
+.hero-artwork-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-deep);
+}
+.hero-artwork-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 32%;
+  transform: scale(1.02);
+  filter: brightness(0.92) contrast(1.1);
+  transition: transform 0.6s var(--ease-out);
+}
+.home-hero:hover .hero-artwork-img {
+  transform: scale(1.04);
+}
+
+/* Radial Vignette: Softly blends top, left, and right edges into deep black */
+.hero-radial-mask {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 95% 85% at 50% 45%, transparent 38%, rgba(5, 5, 7, 0.45) 65%, #050507 98%);
+  pointer-events: none;
+}
+
+/* Bottom Gradient: Deep dark fade ensuring maximum text legibility */
+.hero-bottom-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 380px;
+  background: linear-gradient(to top, #050507 20%, rgba(5, 5, 7, 0.92) 55%, rgba(5, 5, 7, 0.5) 80%, transparent 100%);
+  pointer-events: none;
+}
+
+/* ---- Atmospheric Drifting Smoke & Red/Blue Speed Streaks ------------------- */
+.hero-atmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Glowing Speedometer Arc (matches the red gauge in the artwork) */
+.speedo-halo {
+  position: absolute;
+  top: 10%;
+  right: 18%;
+  width: 440px;
+  height: 440px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 26, 26, 0.28) 0%, rgba(225, 6, 0, 0.08) 50%, transparent 70%);
+  filter: blur(45px);
+  animation: speedo-pulse 4s ease-in-out infinite alternate;
+}
+@keyframes speedo-pulse {
+  0% { opacity: 0.6; transform: scale(0.96); }
+  100% { opacity: 1; transform: scale(1.06); filter: blur(55px); }
+}
+
+/* Red & Blue Drifting Smoke */
+.smoke-red-drift {
+  position: absolute;
+  top: 15%;
+  right: 12%;
+  width: 520px;
+  height: 380px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(225, 6, 0, 0.25) 0%, rgba(225, 6, 0, 0.06) 50%, transparent 70%);
+  filter: blur(55px);
+  animation: smoke-drift-red 11s ease-in-out infinite alternate;
+}
+.smoke-blue-drift {
+  position: absolute;
+  top: 25%;
+  left: 15%;
+  width: 560px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(30, 60, 255, 0.22) 0%, rgba(30, 60, 255, 0.05) 50%, transparent 70%);
+  filter: blur(55px);
+  animation: smoke-drift-blue 13s ease-in-out infinite alternate;
+}
+.smoke-white-drift {
+  position: absolute;
+  bottom: 25%;
+  left: 30%;
+  width: 600px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 65%);
+  filter: blur(45px);
+  animation: smoke-drift-white 16s ease-in-out infinite alternate;
+}
+
+@keyframes smoke-drift-red {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(35px, -20px) scale(1.08); }
+  100% { transform: translate(-25px, 20px) scale(0.95); }
+}
+@keyframes smoke-drift-blue {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-30px, 25px) scale(1.1); }
+  100% { transform: translate(30px, -15px) scale(0.92); }
+}
+@keyframes smoke-drift-white {
+  0% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+  50% { transform: translate(40px, -15px) scale(1.05); opacity: 0.8; }
+  100% { transform: translate(-30px, 15px) scale(0.95); opacity: 0.4; }
+}
+
+/* Sliding High-Speed Light Streaks */
+.streak-beam-red {
+  position: absolute;
+  top: 38%;
+  left: -20%;
+  width: 140%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(225, 6, 0, 0) 20%, rgba(255, 26, 26, 0.8) 50%, transparent 80%);
+  filter: drop-shadow(0 0 8px #FF1A1A);
+  transform: rotate(-3deg);
+  opacity: 0.7;
+  animation: beam-slide 6s ease-in-out infinite;
+}
+.streak-beam-blue {
+  position: absolute;
+  top: 48%;
+  left: -20%;
+  width: 140%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(30, 60, 255, 0) 20%, rgba(58, 104, 255, 0.8) 50%, transparent 80%);
+  filter: drop-shadow(0 0 8px #1E3CFF);
+  transform: rotate(-1deg);
+  opacity: 0.6;
+  animation: beam-slide 7.5s ease-in-out infinite reverse;
+}
+@keyframes beam-slide {
+  0% { transform: translateX(-40%) rotate(-2deg); opacity: 0; }
+  30% { opacity: 0.8; }
+  70% { opacity: 0.8; }
+  100% { transform: translateX(40%) rotate(-2deg); opacity: 0; }
+}
+
+/* ---- Hero Content Layer --------------------------------------------------- */
+.home-hero-content {
+  position: relative;
+  z-index: 5;
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Small Kicker Pill with Red & Blue Dots */
+.hero-subbadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 18px;
+  background: rgba(14, 14, 20, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  backdrop-filter: blur(12px);
+  margin-bottom: 12px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+}
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.dot-red {
+  background: var(--neon-red);
+  box-shadow: 0 0 8px var(--neon-red);
+}
+.dot-blue {
+  background: var(--neon-blue);
+  box-shadow: 0 0 8px var(--neon-blue);
+}
+.badge-text {
+  font-family: 'Orbitron', 'Chakra Petch', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #FFFFFF;
+}
+
+/* Chrome Headline & Clean Subtext */
+.home-hero h1 {
+  font-family: 'Orbitron', 'Chakra Petch', sans-serif;
+  font-size: clamp(2.4rem, 1.6rem + 3.2vw, 4.4rem);
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.05;
+  background: linear-gradient(180deg, #FFFFFF 0%, #E8E8EE 42%, #8A8A8A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 4px 18px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 25px rgba(225, 6, 0, 0.35));
+  margin: 6px 0 10px;
+}
+
+.home-hero-tagline {
+  font-family: 'Chakra Petch', 'Orbitron', sans-serif;
+  font-size: clamp(1.2rem, 1rem + 0.8vw, 1.65rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #FFFFFF;
+  text-shadow: 0 0 16px rgba(225, 6, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.home-hero-lede {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.95rem, 0.88rem + 0.3vw, 1.05rem);
+  line-height: 1.65;
+  color: var(--text-gray);
+  margin: 10px auto 0;
+  max-width: 54ch;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+/* Tagline with Red Dot Separators */
+.hero-motto-tag {
+  font-family: 'Orbitron', 'Chakra Petch', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: #D4D4D8;
+  margin-top: 14px;
+  text-transform: uppercase;
+}
+.motto-dot {
+  color: var(--neon-red);
+  margin: 0 6px;
+  font-size: 14px;
+  text-shadow: 0 0 8px var(--neon-red);
+}
+
+/* Red Glowing Circular Action Button with Bounce Animation */
+.home-hero-cta-wrap {
+  margin-top: 34px;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 10;
+}
+.home-hero-cta {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.home-hero-cta-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 35% 35%, #FF2626 0%, #E10600 55%, #880000 100%);
+  color: #FFFFFF;
+  border: 2px solid var(--neon-red);
+  box-shadow: 0 0 25px rgba(225, 6, 0, 0.75), 0 0 50px rgba(255, 26, 26, 0.45);
+  animation: cta-bounce-gentle 2.6s ease-in-out infinite;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.home-hero-cta-text {
+  font-family: 'Orbitron', 'Chakra Petch', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #E0E0E6;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+.home-hero-cta:hover .home-hero-cta-icon {
+  transform: scale(1.12);
+  box-shadow: 0 0 35px rgba(255, 26, 26, 1), 0 0 65px rgba(225, 6, 0, 0.9);
+}
+.home-hero-cta:hover .home-hero-cta-text {
+  color: #FFFFFF;
+  text-shadow: 0 0 12px var(--neon-red);
+}
+
+@keyframes cta-bounce-gentle {
+  0%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 0 22px rgba(225, 6, 0, 0.65), 0 0 38px rgba(255, 26, 26, 0.4);
+  }
+  50% {
+    transform: translateY(8px);
+    box-shadow: 0 0 35px rgba(225, 6, 0, 1), 0 0 55px rgba(255, 26, 26, 0.7);
+  }
+}
+
+/* ---- Wet Reflective Floor with Dual Neon Reflections ----------------------- */
+.hero-wet-floor {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  pointer-events: none;
+  z-index: 3;
+}
+.floor-reflection-red {
+  position: absolute;
+  bottom: 0;
+  right: 15%;
+  width: 450px;
+  height: 80px;
+  background: radial-gradient(ellipse at 50% 100%, rgba(225, 6, 0, 0.35) 0%, transparent 75%);
+  filter: blur(25px);
+}
+.floor-reflection-blue {
+  position: absolute;
+  bottom: 0;
+  left: 15%;
+  width: 450px;
+  height: 80px;
+  background: radial-gradient(ellipse at 50% 100%, rgba(30, 60, 255, 0.28) 0%, transparent 75%);
+  filter: blur(25px);
+}
+.floor-ground-line {
+  position: absolute;
+  bottom: 0;
+  left: 5%;
+  right: 5%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(30, 60, 255, 0.5) 25%, rgba(225, 6, 0, 0.6) 75%, transparent);
+}
+
+/* ---- Slanted Section Divider (12deg) -------------------------------------- */
+.section-slant-divider {
+  position: relative;
+  height: 48px;
+  background: var(--bg-deep);
+  overflow: hidden;
+}
+.slant-track {
+  position: absolute;
+  top: 50%;
+  left: -5%;
+  width: 110%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--electric-blue) 25%, var(--neon-red) 50%, var(--electric-blue) 75%, transparent);
+  box-shadow: 0 0 15px rgba(225, 6, 0, 0.7), 0 0 25px rgba(30, 60, 255, 0.4);
+  transform: rotate(-1.5deg);
+}
+
+/* ---- Section Headers ------------------------------------------------------ */
+.section-heading-wrap {
+  text-align: center;
+  margin-bottom: 50px;
+}
+.section-kicker {
+  display: inline-block;
+  font-family: 'Orbitron', 'Chakra Petch', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: var(--neon-red);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.section-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(1.8rem, 1.4rem + 1.8vw, 2.7rem);
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  color: #FFFFFF;
+  text-transform: uppercase;
+}
+.section-title-streak {
+  width: 90px;
+  height: 3px;
+  margin: 14px auto 0;
+  background: linear-gradient(90deg, transparent, var(--neon-red) 30%, var(--electric-blue) 70%, transparent);
+  box-shadow: 0 0 12px var(--neon-red);
+}
+
+/* ---- Features Section: Dark Carbon Fiber Cards ---------------------------- */
+.home-features {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 64px 24px 80px;
+}
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+.feature-card {
+  position: relative;
+  background: 
+    radial-gradient(black 15%, transparent 16%) 0 0,
+    radial-gradient(black 15%, transparent 16%) 8px 8px,
+    radial-gradient(rgba(255,255,255,.05) 15%, transparent 20%) 0 1px,
+    radial-gradient(rgba(255,255,255,.05) 15%, transparent 20%) 8px 9px,
+    #0c0c11;
+  background-size: 16px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 38px 28px;
+  text-align: center;
+  overflow: hidden;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
+  transition: transform 0.3s var(--ease-out), border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.feature-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--neon-red);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.9), 0 0 30px rgba(225, 6, 0, 0.35);
+}
+
+/* Diagonal Light Sweep Effect */
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -80%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(90deg, transparent, rgba(30, 60, 255, 0.15), rgba(255, 26, 26, 0.2), rgba(255, 255, 255, 0.25), transparent);
+  transform: rotate(25deg);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.7s ease, left 0.7s ease, opacity 0.3s ease;
+}
+.feature-card:hover::before {
+  left: 130%;
+  opacity: 1;
+}
+
+/* Dark Glass Circular Icon */
+.feature-icon-glass {
+  display: inline-grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: rgba(18, 18, 24, 0.85);
+  border: 1px solid rgba(225, 6, 0, 0.45);
+  box-shadow: 0 0 22px rgba(225, 6, 0, 0.25), inset 0 0 12px rgba(225, 6, 0, 0.15);
+  color: var(--neon-red);
+  margin-bottom: 22px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.feature-icon-glass svg {
+  filter: drop-shadow(0 0 6px rgba(255, 26, 26, 0.8));
+}
+.feature-card:hover .feature-icon-glass {
+  transform: scale(1.1);
+  box-shadow: 0 0 30px rgba(255, 26, 26, 0.7), inset 0 0 18px rgba(30, 60, 255, 0.3);
+}
+.feature-card h2 {
+  font-family: 'Orbitron', 'Chakra Petch', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #FFFFFF;
+  margin-bottom: 12px;
+}
+.card-streak {
+  width: 40px;
+  height: 2px;
+  background: var(--racing-red);
+  margin: 0 auto 16px;
+}
+.feature-card p {
+  color: var(--text-gray);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+.feature-card strong {
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* ---- 3D Car Showcase Strip (Dark Reflective Floor + Red/Blue Rim Light) ---- */
+.home-showcase-strip {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 60px 24px 80px;
+}
+.showcase-strip-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+}
+.showcase-card {
+  background: 
+    radial-gradient(black 15%, transparent 16%) 0 0,
+    radial-gradient(black 15%, transparent 16%) 8px 8px,
+    radial-gradient(rgba(255,255,255,.05) 15%, transparent 20%) 0 1px,
+    radial-gradient(rgba(255,255,255,.05) 15%, transparent 20%) 8px 9px,
+    #0c0c11;
+  background-size: 16px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+  transition: transform 0.28s var(--ease-out), border-color 0.28s ease, box-shadow 0.28s ease;
+  display: flex;
+  flex-direction: column;
+}
+.showcase-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--neon-red);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.95), 0 0 25px rgba(225, 6, 0, 0.35);
+}
+
+/* Dark Reflective Stage */
+.showcase-stage {
+  position: relative;
+  background: radial-gradient(circle at 50% 60%, rgba(30, 60, 255, 0.15) 0%, rgba(225, 6, 0, 0.15) 45%, #050507 90%);
+  padding: 26px 16px 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.car-rim-red {
+  position: absolute;
+  top: 10%;
+  right: 10%;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(255, 26, 26, 0.4) 0%, transparent 70%);
+  filter: blur(18px);
+  pointer-events: none;
+}
+.car-rim-blue {
+  position: absolute;
+  bottom: 15%;
+  left: 10%;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(30, 60, 255, 0.35) 0%, transparent 70%);
+  filter: blur(18px);
+  pointer-events: none;
+}
+.showcase-stage img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 200px;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.85));
+  transition: transform 0.3s ease;
+}
+.showcase-card:hover .showcase-stage img {
+  transform: scale(1.05);
+}
+.stage-ground-reflection {
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(30, 60, 255, 0.6) 30%, rgba(255, 26, 26, 0.7) 70%, transparent);
+  box-shadow: 0 0 12px rgba(255, 26, 26, 0.8);
+}
+
+.showcase-card-body {
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  text-align: center;
+}
+.showcase-badge {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--neon-red);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.showcase-card-body h3 {
+  font-family: 'Orbitron', 'Chakra Petch', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+.showcase-specs {
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  margin: 6px 0 16px;
+  line-height: 1.45;
+  flex-grow: 1;
+}
+
+/* ---- Closing Section ------------------------------------------------------ */
+.home-close {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px 24px 80px;
+}
+.home-close-panel {
+  position: relative;
+  background: 
+    radial-gradient(black 15%, transparent 16%) 0 0,
+    radial-gradient(black 15%, transparent 16%) 8px 8px,
+    radial-gradient(rgba(255,255,255,.05) 15%, transparent 20%) 0 1px,
+    radial-gradient(rgba(255,255,255,.05) 15%, transparent 20%) 8px 9px,
+    #0d0d14;
+  background-size: 16px 16px;
+  border: 1px solid rgba(225, 6, 0, 0.35);
+  border-radius: 14px;
+  padding: clamp(40px, 6vw, 68px) 32px;
+  text-align: center;
+  overflow: hidden;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.8), 0 0 35px rgba(225, 6, 0, 0.2);
+}
+.close-panel-glow {
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 500px;
+  height: 150px;
+  background: radial-gradient(ellipse at 50% 50%, rgba(225, 6, 0, 0.3) 0%, rgba(30, 60, 255, 0.2) 60%, transparent 80%);
+  filter: blur(40px);
+  pointer-events: none;
+}
+.home-close h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(1.8rem, 1.4rem + 1.8vw, 2.7rem);
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  color: #FFFFFF;
+  text-transform: uppercase;
+}
+.home-close-lede {
+  color: var(--text-gray);
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 52ch;
+  margin: 16px auto 32px;
+}
+.home-close-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+}
+
+/* ---- Reveal Animations --------------------------------------------------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.75s var(--ease-out), transform 0.75s var(--ease-out);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { transition: opacity 0.2s linear; transform: none; opacity: 1; }
+  .home-hero-cta-icon { animation: none; }
+  .smoke-red-drift, .smoke-blue-drift, .smoke-white-drift, .speedo-halo { animation: none; }
+}
+
+/* ---- Responsive Breakpoints ---------------------------------------------- */
+@media (max-width: 1024px) {
+  .showcase-strip-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .showcase-strip-grid {
+    grid-template-columns: 1fr;
+  }
+  .home-hero {
+    padding: 30px 16px 60px;
+  }
+  .hero-artwork-img {
+    object-position: center 25%;
+  }
+}

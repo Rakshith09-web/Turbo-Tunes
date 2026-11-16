@@ -1,0 +1,522 @@
+.customizer-hero {
+  text-align: center;
+  padding: 32px 0 8px;
+}
+.car-eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.car-title {
+  font-weight: 500;
+  font-size: 40px;
+  letter-spacing: -0.01em;
+  margin-top: 6px;
+}
+
+.viewer-stage {
+  position: relative;
+  height: min(70vh, 600px);
+  min-height: 420px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 78%, rgba(32, 31, 28, 0.06) 0%, rgba(32, 31, 28, 0) 60%), var(--bg);
+}
+
+#viewer {
+  position: absolute;
+  inset: 0;
+}
+
+.viewer-hint {
+  position: absolute;
+  bottom: 18px;
+  left: 20px;
+  font-size: 11px;
+  color: var(--muted-strong);
+  letter-spacing: 0.02em;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(6px);
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.viewer-stage.midnight-mode .viewer-hint {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+}
+
+.view-presets {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 10;
+}
+.view-presets button {
+  background: var(--card-bg);
+  color: var(--muted-strong);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.35rem 0.55rem;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.view-presets button.btn-zoom {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0.32rem 0.55rem;
+}
+.view-presets button.btn-zoom-reset {
+  font-weight: 600;
+  font-size: 11px;
+  padding: 0.35rem 0.55rem;
+}
+.view-presets button:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.view-presets button.active {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+#options-panel {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.toolbar-swatches {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 10px 20px;
+  box-shadow: 0 12px 32px rgba(32, 31, 28, 0.08);
+}
+.swatch-row-label {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  margin-right: 2px;
+}
+/* The "Finish" group inside the Spoiler tab: a thin divider, then colour swatches. */
+.swatch-row-label-sub {
+  margin-left: 6px;
+  padding-left: 14px;
+  border-left: 1px solid var(--border);
+}
+.swatch-carbon {
+  background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.16) 0 2px, transparent 2px 5px);
+}
+.swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+/* A colour row's "remove this part" choice (e.g. spoiler "None") — an empty ring instead of
+   a fill, so it reads as "nothing" rather than as one more colour to pick. */
+.swatch-none {
+  background: var(--card-bg);
+  border: 2px dashed var(--border);
+  position: relative;
+}
+.swatch-none::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-top: 1.5px solid var(--muted-strong);
+  transform: rotate(-45deg);
+}
+.swatch.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--card-bg), 0 0 0 3px var(--accent);
+}
+.option-pill {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: var(--muted-strong);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.option-pill.selected {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.toolbar-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 10px;
+  box-shadow: 0 14px 36px rgba(32, 31, 28, 0.08);
+}
+.toolbtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: none;
+  background: none;
+  color: var(--muted-strong);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.toolbtn svg { flex-shrink: 0; }
+.toolbtn.active {
+  background: var(--accent);
+  color: #FFFFFF;
+}
+
+.save-build-bar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.save-build-btn {
+  background: var(--accent);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(198, 100, 30, 0.25);
+  transition: opacity 0.15s ease;
+}
+.save-build-btn:hover { opacity: 0.9; }
+
+.toast-message {
+  background: var(--fg);
+  color: #FFFFFF;
+  font-size: 12px;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  max-width: 240px;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.toast-message.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Snapshot button in view presets */
+.view-presets button.btn-snapshot {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.view-presets button.btn-snapshot:hover {
+  opacity: 0.9;
+  color: #ffffff;
+}
+
+/* Right-side tools container (Turbo Sound on top, Ambience & Glow below) */
+.customizer-sidebar-right {
+  position: absolute;
+  top: 64px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 215px;
+  box-sizing: border-box;
+  z-index: 10;
+}
+
+/* Turbo Sound & Rev Simulator Console */
+.turbo-audio-bar {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 10px 28px rgba(32, 31, 28, 0.08);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.turbo-audio-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-strong);
+}
+
+.turbo-audio-subtitle {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  margin-top: -3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.turbo-audio-badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--border);
+  color: var(--muted-strong);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.turbo-audio-badge.active {
+  background: #22c55e;
+  color: #ffffff;
+}
+
+.turbo-audio-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.turbo-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 38px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 4px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  box-sizing: border-box;
+}
+.turbo-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+.turbo-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.turbo-btn.btn-ignite.running {
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #b91c1c;
+}
+.turbo-btn.btn-rev {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+.turbo-btn.btn-rev:active:not(:disabled), .turbo-btn.btn-rev.revving {
+  transform: scale(0.96);
+  background: #ea580c;
+}
+
+.turbo-rpm-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.turbo-rpm-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--muted-strong);
+}
+.turbo-rpm-bar-track {
+  height: 6px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.turbo-rpm-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #22c55e 0%, #eab308 65%, #ef4444 95%);
+  transition: width 0.05s linear;
+}
+
+/* Atmosphere & Lighting Control Console */
+.atmosphere-bar {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 10px 28px rgba(32, 31, 28, 0.08);
+  width: 100%;
+  box-sizing: border-box;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.atmosphere-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-strong);
+}
+
+.atmosphere-actions {
+  display: flex;
+}
+.atmosphere-actions .atmo-btn {
+  width: 100%;
+}
+
+.atmo-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 38px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 4px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  box-sizing: border-box;
+}
+.atmo-btn:hover {
+  border-color: var(--accent);
+}
+.atmo-btn.active {
+  background: #1e293b;
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+.underglow-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.underglow-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted-strong);
+}
+.underglow-swatches {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.underglow-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  flex-shrink: 0;
+}
+.underglow-swatch:hover {
+  transform: scale(1.15);
+}
+.underglow-swatch.active {
+  border-color: #0f172a;
+  transform: scale(1.15);
+  box-shadow: 0 0 10px currentColor;
+}
+.underglow-swatch-none {
+  background: transparent;
+  border: 1.5px dashed var(--muted-strong);
+  position: relative;
+}
+.underglow-swatch-none.active {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+/* Midnight Mode Styling for Stage and Panels */
+.viewer-stage.midnight-mode {
+  background: radial-gradient(ellipse at 50% 75%, #455268 0%, #2c3545 50%, #181f2a 85%) !important;
+}
+.viewer-stage.midnight-mode .atmosphere-bar,
+.viewer-stage.midnight-mode .turbo-audio-bar {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+.viewer-stage.midnight-mode .atmosphere-header,
+.viewer-stage.midnight-mode .turbo-audio-header,
+.viewer-stage.midnight-mode .underglow-header,
+.viewer-stage.midnight-mode .turbo-rpm-text {
+  color: #94a3b8;
+}
+.viewer-stage.midnight-mode .atmo-btn,
+.viewer-stage.midnight-mode .turbo-btn {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+}
+.viewer-stage.midnight-mode .underglow-swatch.active {
+  border-color: #ffffff;
+}
+
+

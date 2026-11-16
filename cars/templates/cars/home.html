@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Turbo Tunes | 3D Cinematic Car Customizer{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'cars/css/home.css' %}" />
+  {% if hero_data %}{% include "includes/three_importmap.html" %}{% endif %}
+{% endblock %}
+{% block content %}
+  <section class="home-hero">
+    {% if hero_data %}
+      {{ hero_data|json_script:"hero-car-data" }}
+      <div id="home-hero-stage" class="home-hero-stage" aria-hidden="true"></div>
+    {% endif %}
+
+    <!-- Full-Width Hero Background Artwork (Evo VIII with Speedometer, Smoke & Reflections) -->
+    <div class="hero-artwork-canvas" aria-hidden="true">
+      <img src="{% static 'images/hero-evo.jpg' %}" alt="Turbo Tunes Evo VIII Hero" class="hero-artwork-img" />
+      <div class="hero-radial-mask"></div>
+      <div class="hero-bottom-gradient"></div>
+    </div>
+
+    <!-- Atmospheric Visual Effects: Red & Blue Streaks, Drifting Smoke, Speedometer Glow -->
+    <div class="hero-atmosphere" aria-hidden="true">
+      <div class="smoke-red-drift"></div>
+      <div class="smoke-blue-drift"></div>
+      <div class="smoke-white-drift"></div>
+      <div class="speedo-halo"></div>
+      <div class="streak-beam-red"></div>
+      <div class="streak-beam-blue"></div>
+    </div>
+
+    <!-- Hero Foreground Content Overlay -->
+    <div class="home-hero-content">
+      <div class="hero-subbadge">
+        <span class="badge-dot dot-red"></span>
+        <span class="badge-text">EST. PERFORMANCE TUNING</span>
+        <span class="badge-dot dot-blue"></span>
+      </div>
+
+      <h1>Turbo Tunes</h1>
+      <p class="home-hero-tagline">Design your car. Down to the last detail.</p>
+      <p class="home-hero-lede">Real-time 3D customization, saved builds, and service booking — all in one place.</p>
+
+      <p class="hero-motto-tag">MODIFY <span class="motto-dot">&bull;</span> UPGRADE <span class="motto-dot">&bull;</span> DRIVE BETTER</p>
+
+      <!-- Red Glowing Circular CTA Button with Gentle Bounce placed Below Subtext -->
+      <div class="home-hero-cta-wrap">
+        <a class="home-hero-cta" href="{% url 'car_gallery' %}" aria-label="Explore All Cars">
+          <span class="home-hero-cta-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15M12 19l-6-6M12 19l6-6" /></svg>
+          </span>
+          <span class="home-hero-cta-text">EXPLORE ALL CARS</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Wet Reflective Floor with Red and Blue Neon Rim Highlights -->
+    <div class="hero-wet-floor" aria-hidden="true">
+      <div class="floor-reflection-red"></div>
+      <div class="floor-reflection-blue"></div>
+      <div class="floor-ground-line"></div>
+    </div>
+  </section>
+
+  <!-- Slanted Section Divider (12deg) with Dual Red/Blue Neon Streak -->
+  <div class="section-slant-divider" aria-hidden="true">
+    <div class="slant-track"></div>
+  </div>
+
+  <!-- Features Section: Dark Carbon Fiber Cards with Glowing Red Icons & Diagonal Sweep -->
+  <section class="home-features">
+    <div class="section-heading-wrap reveal">
+      <span class="section-kicker">NEXT-GEN AUTOMOTIVE ENGINEERING</span>
+      <h2 class="section-title">BUILT FOR SPEED &amp; PRECISION</h2>
+      <div class="section-title-streak" aria-hidden="true"></div>
+    </div>
+
+    <div class="features-grid">
+      <article class="feature-card reveal">
+        <div class="feature-card-glow" aria-hidden="true"></div>
+        <div class="feature-icon-glass">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" /></svg>
+        </div>
+        <h2>Customize every detail</h2>
+        <div class="card-streak" aria-hidden="true"></div>
+        <p>Change the paint, wheels, exhaust and decals on any car in the lineup — sedans, SUVs, hatchbacks and
+          more — and watch it update instantly in 3D, from any angle.</p>
+        <div class="card-sweep" aria-hidden="true"></div>
+      </article>
+
+      <article class="feature-card reveal">
+        <div class="feature-card-glow" aria-hidden="true"></div>
+        <div class="feature-icon-glass">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1Z" /></svg>
+        </div>
+        <h2>Save your build</h2>
+        <div class="card-streak" aria-hidden="true"></div>
+        <p>Found a look you love? Save it to <strong>My Garage</strong> and pick up right where you left off,
+          any time you come back.</p>
+        <div class="card-sweep" aria-hidden="true"></div>
+      </article>
+
+      <article class="feature-card reveal">
+        <div class="feature-card-glow" aria-hidden="true"></div>
+        <div class="feature-icon-glass">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 1-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 1 5.4-5.4L15 12l-3-3 2.7-2.7Z" /></svg>
+        </div>
+        <h2>Book a service</h2>
+        <div class="card-streak" aria-hidden="true"></div>
+        <p>When your own car needs work, a mechanic comes to you. Choose a service, a time, and we'll take it
+          from there — track the whole request in My Requests.</p>
+        <div class="card-sweep" aria-hidden="true"></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- 3D Car Showcase Strip (Dark Reflective Floor with Red and Blue Rim Lighting) -->
+  <section class="home-showcase-strip reveal">
+    <div class="section-heading-wrap">
+      <span class="section-kicker">SHOWROOM SELECTION</span>
+      <h2 class="section-title">THE 3D PERFORMANCE FLEET</h2>
+      <div class="section-title-streak" aria-hidden="true"></div>
+    </div>
+
+    <div class="showcase-strip-grid">
+      <div class="showcase-card">
+        <div class="showcase-stage">
+          <div class="car-rim-red" aria-hidden="true"></div>
+          <div class="car-rim-blue" aria-hidden="true"></div>
+          <img src="/media/cars/thumbnails/future-racer.png" alt="Future Hypercar" onerror="this.src='{% static 'images/logo.png' %}';" />
+          <div class="stage-ground-reflection" aria-hidden="true"></div>
+        </div>
+        <div class="showcase-card-body">
+          <span class="showcase-badge badge-hyper">HYPERCAR SPEC</span>
+          <h3>FUTURE RACER</h3>
+          <p class="showcase-specs">Carbon Splitter &bull; Dual Wings &bull; Sponsor Livery</p>
+          <a href="{% url 'car_gallery' %}" class="btn-slanted btn-sm btn-solid-red"><span>TUNE IN 3D</span></a>
+        </div>
+      </div>
+
+      <div class="showcase-card">
+        <div class="showcase-stage">
+          <div class="car-rim-red" aria-hidden="true"></div>
+          <div class="car-rim-blue" aria-hidden="true"></div>
+          <img src="/media/cars/thumbnails/sports-sedan.png" alt="Sports Sedan" onerror="this.src='{% static 'images/logo.png' %}';" />
+          <div class="stage-ground-reflection" aria-hidden="true"></div>
+        </div>
+        <div class="showcase-card-body">
+          <span class="showcase-badge badge-gt">GT TOURING</span>
+          <h3>SPORTS SEDAN</h3>
+          <p class="showcase-specs">Widebody Aero &bull; Quad Exhaust &bull; Alloy Rims</p>
+          <a href="{% url 'car_gallery' %}" class="btn-slanted btn-sm btn-solid-red"><span>TUNE IN 3D</span></a>
+        </div>
+      </div>
+
+      <div class="showcase-card">
+        <div class="showcase-stage">
+          <div class="car-rim-red" aria-hidden="true"></div>
+          <div class="car-rim-blue" aria-hidden="true"></div>
+          <img src="/media/cars/thumbnails/suv.png" alt="Luxury SUV" onerror="this.src='{% static 'images/logo.png' %}';" />
+          <div class="stage-ground-reflection" aria-hidden="true"></div>
+        </div>
+        <div class="showcase-card-body">
+          <span class="showcase-badge badge-allterrain">PERFORMANCE SUV</span>
+          <h3>SUPER SUV</h3>
+          <p class="showcase-specs">Armor Decals &bull; High Clearance &bull; Matte Finish</p>
+          <a href="{% url 'car_gallery' %}" class="btn-slanted btn-sm btn-solid-red"><span>TUNE IN 3D</span></a>
+        </div>
+      </div>
+
+      <div class="showcase-card">
+        <div class="showcase-stage">
+          <div class="car-rim-red" aria-hidden="true"></div>
+          <div class="car-rim-blue" aria-hidden="true"></div>
+          <img src="/media/cars/thumbnails/sports-hatchback.png" alt="Sports Hatchback" onerror="this.src='{% static 'images/logo.png' %}';" />
+          <div class="stage-ground-reflection" aria-hidden="true"></div>
+        </div>
+        <div class="showcase-card-body">
+          <span class="showcase-badge badge-track">TRACK HATCH</span>
+          <h3>SPORTS HATCH</h3>
+          <p class="showcase-specs">Turbo Tuned &bull; Ducktail Spoiler &bull; Claw Graphics</p>
+          <a href="{% url 'car_gallery' %}" class="btn-slanted btn-sm btn-solid-red"><span>TUNE IN 3D</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Closing Section: Aggressive Racing Red & Blue CTA -->
+  <section class="home-close reveal">
+    <div class="home-close-panel">
+      <div class="close-panel-glow" aria-hidden="true"></div>
+      <span class="section-kicker">READY TO HIT THE TRACK?</span>
+      <h2>Ready to see it in 3D?</h2>
+      <div class="section-title-streak" aria-hidden="true"></div>
+      <p class="home-close-lede">Experience dynamic lighting, multi-angle camera orbits, bespoke aero kits, and instant doorstep servicing.</p>
+      <div class="home-close-actions">
+        <a class="btn-slanted btn-solid-red btn-lg" href="{% url 'car_gallery' %}"><span>Explore All Cars</span></a>
+        <a class="btn-slanted btn-outline-white btn-lg" href="{% url 'book_service' %}"><span>Book a Service</span></a>
+      </div>
+    </div>
+  </section>
+
+  {% if hero_data %}<script type="module" src="{% static 'cars/js/home.js' %}"></script>{% endif %}
+{% endblock %}

@@ -1,0 +1,80 @@
+# AutoCraft 3D
+
+An interactive 3D car customization website (Django + Three.js). Final-year BCA project.
+
+Visitors open the site and land straight in a 3D showroom. They can rotate the car to any angle, jump to
+front/rear/left/right/top/bottom views, and customize paint, wheels (rim colour), exhaust tips, spoilers (style and finish) and decals live, inside a
+3D garage.
+Logged-in users can save builds to "My Garage" and reopen them later.
+
+## Tech stack
+
+| Piece | Used for |
+|---|---|
+| Python + Django | Backend: routing, database, login/registration, admin panel |
+| SQLite | Database (built into Django, no setup) |
+| Three.js (via CDN) | Real-time 3D rendering in the browser |
+| Django templates + CSS | Pages and the light minimalist theme |
+
+## Run it (Windows, VS Code terminal)
+
+From the project folder (the one containing `manage.py`):
+
+    .venv\Scripts\python manage.py runserver
+
+Then open http://127.0.0.1:8000/. Stop with `Ctrl+C`.
+
+### First-time setup (only on a fresh copy of the project)
+
+    python -m venv .venv
+    .venv\Scripts\pip install -r requirements.txt
+    .venv\Scripts\python manage.py migrate
+    .venv\Scripts\python manage.py createsuperuser
+    .venv\Scripts\python manage.py seed_demo_cars
+
+`seed_demo_cars` loads the five demo cars with all their options. It's safe to run again.
+
+## Pages
+
+| URL | What it is |
+|---|---|
+| `/` | 3D showroom (the featured car) |
+| `/cars/` | All cars |
+| `/cars/<id>/` | Customizer for one car |
+| `/accounts/register/`, `/accounts/login/` | Sign up and log in |
+| `/garage/` | My Garage (saved builds, login required) |
+| `/service/book/` | Book a service: the mechanic comes to the customer (login required) |
+| `/service/` | My service requests, with status |
+| `/service/<id>/` | One request: details, progress and cancel |
+| `/admin/` | Admin panel: add cars and customization options |
+
+## Tests
+
+    .venv\Scripts\python manage.py test
+
+## Project layout
+
+- `cars/` catalog, customizer page and the Three.js viewer (`cars/static/cars/js/viewer.js`)
+- `accounts/` registration, login, `Profile`
+- `garage/` saved builds
+- `bookings/` service booking: requests, the booking form and the 3D preview of the customer's car
+- `templates/`, `static/` shared layout and styling
+- `cars/seed_assets/` the demo models, thumbnails and their license
+- `docs/` synopsis, design spec, implementation plan and the UI mockup
+
+## Notes
+
+- ⚠️ The demo cars are realistic scanned models sourced from Sketchfab, not the original Kenney CC0 set —
+  **most are licensed non-commercial only**, and one carries a real F1 team's sponsor livery. Fine for
+  coursework, but read `cars/seed_assets/README.md` before deploying this anywhere public or putting it
+  in a portfolio. Each car offers a different mix of paint, wheel colour, spoiler, generated exhaust tips
+  and decals depending on what the underlying model actually supports — see that same file for specifics.
+- To add your own car, upload a `.glb` as the car's "model file" in the admin panel and add its
+  customization options there. A car with no model file falls back to a built-in placeholder.
+- After editing CSS or JS, hard-refresh the browser (`Ctrl+Shift+R`), since the dev server doesn't send
+  cache headers for static files.
+- Service requests are managed by staff in the admin panel (`/admin/` > Service requests): filter by status or date,
+  search by registration number, and use the actions to mark requests confirmed, in progress or completed.
+  Customers can cancel a request themselves until it is in progress.
+- The booking page shows the customer's car in 3D using the closest of our showroom body styles, since we can't
+  model every make and model.
