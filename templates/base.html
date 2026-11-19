@@ -46,8 +46,10 @@
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Checkered-flag divider above footer -->
-  <div class="checkered-flag-divider" aria-hidden="true"></div>
+  <!-- Footer Divider (subtle luminous streak) -->
+  {% block footer_divider %}
+    <div class="checkered-flag-divider" aria-hidden="true"></div>
+  {% endblock %}
 
   <!-- Cinematic Dark Footer -->
   <footer class="site-footer">

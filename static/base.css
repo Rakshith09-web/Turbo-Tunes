@@ -308,22 +308,14 @@ main {
   padding: 0 0 48px;
 }
 
-/* ---- Checkered Flag Divider ----------------------------------------------- */
+/* ---- Sleek Racing Accent Divider ----------------------------------------- */
 .checkered-flag-divider {
   position: relative;
-  height: 14px;
+  height: 2px;
   width: 100%;
-  background-image: 
-    linear-gradient(45deg, #070709 25%, transparent 25%), 
-    linear-gradient(-45deg, #070709 25%, transparent 25%), 
-    linear-gradient(45deg, transparent 75%, #070709 75%), 
-    linear-gradient(-45deg, transparent 75%, #070709 75%);
-  background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
-  background-color: var(--racing-red);
-  border-top: 1px solid var(--neon-red);
-  border-bottom: 1px solid #000;
-  box-shadow: 0 0 25px rgba(225, 6, 0, 0.45);
+  background: linear-gradient(90deg, transparent 5%, rgba(225, 6, 0, 0.45) 30%, rgba(255, 26, 26, 0.85) 50%, rgba(225, 6, 0, 0.45) 70%, transparent 95%);
+  box-shadow: 0 0 16px rgba(225, 6, 0, 0.35);
+  border: none;
 }
 
 /* ---- Cinematic Dark Footer ------------------------------------------------ */
