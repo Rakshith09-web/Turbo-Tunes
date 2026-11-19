@@ -99,6 +99,11 @@ PAINTS = [
     ("Miami Blue", "#00A3E0"),
     ("Nardo Grey", "#848789"),
     ("Lime Green", "#76B900"),
+    ("Ruby Red", "#8A1828"),
+    ("British Racing Green", "#1B4D3E"),
+    ("Chalk White", "#D1D5DB"),
+    ("Frozen Bronze", "#926B43"),
+    ("Sakura Pink", "#FF6B8B"),
 ]
 
 # Real wheel finishes rather than body-paint colours.
