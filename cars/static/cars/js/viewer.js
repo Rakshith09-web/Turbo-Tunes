@@ -1328,6 +1328,8 @@ const CATEGORY_LABELS = {
   exhaust: "Exhaust",
   decal: "Decals",
   spoiler: "Spoiler",
+  sound: "Sound",
+  ambience: "Ambience",
 };
 
 // Stroke-based, 17px, one consistent style — matches the icon set used in the draft mockup.
@@ -1346,6 +1348,10 @@ const CATEGORY_ICONS = {
     '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 4 L9 20 M13 4 L13 20"/></svg>',
   spoiler:
     '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8 L20 8 M7 8 L7 13 M17 8 L17 13 M7 13 L17 13"/></svg>',
+  sound:
+    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 A9 9 0 0 0 3 12 A9 9 0 0 0 6 18.5"/><path d="M18 18.5 A9 9 0 0 0 21 12 A9 9 0 0 0 12 3"/><path d="M12 12 L16 8"/><circle cx="12" cy="12" r="2"/></svg>',
+  ambience:
+    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/><path d="M19 5v4m2-2h-4"/></svg>',
 };
 
 let activeCategory = null;
@@ -1355,11 +1361,13 @@ function buildOptionsPanel() {
   panel.innerHTML = "";
 
   // spoiler_finish isn't a tab of its own: its swatches sit in the Spoiler tab after the styles
-  const TAB_ORDER = ["paint", "wheels", "rims", "interior", "exhaust", "decal", "spoiler"];
+  const TAB_ORDER = ["paint", "wheels", "rims", "interior", "exhaust", "decal", "spoiler", "sound", "ambience"];
   const rank = (t) => (TAB_ORDER.includes(t) ? TAB_ORDER.indexOf(t) : TAB_ORDER.length);
   const types = Object.keys(optionsByType)
-    .filter((type) => type !== "spoiler_finish")
-    .sort((a, b) => rank(a) - rank(b));
+    .filter((type) => type !== "spoiler_finish");
+  if (!types.includes("sound")) types.push("sound");
+  if (!types.includes("ambience")) types.push("ambience");
+  types.sort((a, b) => rank(a) - rank(b));
   if (types.length === 0) return;
   activeCategory = types.includes(activeCategory) ? activeCategory : types[0];
 
@@ -1399,6 +1407,17 @@ function renderSwatchRow() {
   swatchRow.innerHTML = "";
 
   const type = activeCategory;
+  if (type === "sound") {
+    renderSoundRow(swatchRow);
+    refreshPanelSelection();
+    return;
+  }
+  if (type === "ambience") {
+    renderAmbienceRow(swatchRow);
+    refreshPanelSelection();
+    return;
+  }
+
   const options = optionsByType[type] || [];
   // Wheels/spoiler are swatches when they're colour options (these cars) and pills when
   // they're named styles/shapes (older Kenney-style cars with a part_file swap) — decided by
@@ -1595,158 +1614,115 @@ function setMidnightMode(enabled) {
   }
 }
 
-function addAtmosphereControls() {
-  const bar = document.createElement("div");
-  bar.className = "atmosphere-bar";
-
-  const header = document.createElement("div");
-  header.className = "atmosphere-header";
-  header.innerHTML = `<span>Ambience & Glow</span>`;
-  bar.appendChild(header);
-
-  const actions = document.createElement("div");
-  actions.className = "atmosphere-actions";
-
-  const nightBtn = document.createElement("button");
-  nightBtn.className = "atmo-btn btn-night";
-  nightBtn.textContent = "🌙 Midnight";
-  nightBtn.title = "Switch between Day and Midnight Garage mode";
-
-  actions.appendChild(nightBtn);
-  bar.appendChild(actions);
-
-  const glowRow = document.createElement("div");
-  glowRow.className = "underglow-row";
-  glowRow.innerHTML = `
-    <div class="underglow-header">
-      <span>Underglow Kit</span>
-      <span id="underglow-label-text">Off</span>
-    </div>
-    <div class="underglow-swatches" id="underglow-swatches"></div>
-  `;
-  bar.appendChild(glowRow);
-
-  getRightSidebar().appendChild(bar);
-
-  const UNDERGLOW_COLORS = [
-    { name: "Off", hex: "none" },
-    { name: "Cyan", hex: "#00f0ff" },
-    { name: "Purple", hex: "#d946ef" },
-    { name: "Lime", hex: "#22c55e" },
-    { name: "Amber", hex: "#f97316" },
-    { name: "Red", hex: "#ef4444" },
-    { name: "Blue", hex: "#3b82f6" },
-  ];
-
-  const swatchesEl = document.getElementById("underglow-swatches");
-  const labelText = document.getElementById("underglow-label-text");
-
-  function selectUnderglow(hex) {
-    setUnderglow(hex);
-    swatchesEl.querySelectorAll(".underglow-swatch").forEach((el) => {
-      el.classList.toggle("active", el.dataset.color === hex);
-    });
-    const found = UNDERGLOW_COLORS.find((c) => c.hex === hex);
-    if (labelText && found) labelText.textContent = found.name;
-  }
-
-  nightBtn.addEventListener("click", () => {
-    const nextState = !isMidnightMode;
-    setMidnightMode(nextState);
-    nightBtn.classList.toggle("active", nextState);
-    nightBtn.textContent = nextState ? "☀️ Daylight" : "🌙 Midnight";
-
-    if (nextState && activeUnderglowColor === "none") {
-      selectUnderglow("#00f0ff");
-    }
-  });
-
-  UNDERGLOW_COLORS.forEach((item) => {
-    const swatch = document.createElement("button");
-    swatch.dataset.color = item.hex;
-    swatch.title = `Underglow: ${item.name}`;
-    if (item.hex === "none") {
-      swatch.className = "underglow-swatch underglow-swatch-none active";
-    } else {
-      swatch.className = "underglow-swatch";
-      swatch.style.backgroundColor = item.hex;
-    }
-    swatch.addEventListener("click", () => selectUnderglow(item.hex));
-    swatchesEl.appendChild(swatch);
-  });
-}
-
-function getRightSidebar() {
-  let sidebar = viewerEl.querySelector(".customizer-sidebar-right");
-  if (!sidebar) {
-    sidebar = document.createElement("div");
-    sidebar.className = "customizer-sidebar-right";
-    viewerEl.appendChild(sidebar);
-  }
-  return sidebar;
-}
+const UNDERGLOW_COLORS = [
+  { name: "Off", hex: "none" },
+  { name: "Cyan", hex: "#00f0ff" },
+  { name: "Purple", hex: "#d946ef" },
+  { name: "Lime", hex: "#22c55e" },
+  { name: "Amber", hex: "#f97316" },
+  { name: "Red", hex: "#ef4444" },
+  { name: "Blue", hex: "#3b82f6" },
+];
 
 let audioEngine = null;
 
-function addTurboAudioControls() {
+function initTurboAudio() {
+  if (audioEngine) return;
   const carName = carData.name || (document.querySelector(".car-title") ? document.querySelector(".car-title").textContent : "");
   audioEngine = new TurboAudioEngine(carName);
   const profile = audioEngine.profile;
 
-  const bar = document.createElement("div");
-  bar.className = "turbo-audio-bar";
+  audioEngine.onRpmChange = (rpm) => {
+    const rpmNum = document.getElementById("turbo-rpm-num");
+    const rpmFill = document.getElementById("turbo-rpm-fill");
+    if (rpmNum) rpmNum.textContent = rpm;
+    if (rpmFill) {
+      const pct = Math.min(100, Math.max(0, (rpm / profile.maxRpm) * 100));
+      rpmFill.style.width = pct + "%";
+    }
+  };
 
-  const header = document.createElement("div");
-  header.className = "turbo-audio-header";
-  header.innerHTML = `<span>Turbo Sound</span><span class="turbo-audio-badge" id="turbo-badge">OFF</span>`;
-  bar.appendChild(header);
+  // Spacebar revving support globally
+  window.addEventListener("keydown", (e) => {
+    if (e.code === "Space" && (e.target === document.body || e.target === viewerEl || (e.target.classList && e.target.classList.contains("toolbtn"))) && audioEngine.isRunning && !audioEngine.isRevving) {
+      e.preventDefault();
+      const revBtn = document.querySelector(".btn-rev");
+      if (revBtn) revBtn.classList.add("revving");
+      const badge = document.getElementById("turbo-badge");
+      if (badge) badge.textContent = "REV";
+      audioEngine.startRev();
+    }
+  });
 
-  const subHeader = document.createElement("div");
-  subHeader.className = "turbo-audio-subtitle";
-  subHeader.textContent = profile.engineTitle;
-  bar.appendChild(subHeader);
+  window.addEventListener("keyup", (e) => {
+    if (e.code === "Space" && audioEngine.isRunning && audioEngine.isRevving) {
+      e.preventDefault();
+      const revBtn = document.querySelector(".btn-rev");
+      if (revBtn) revBtn.classList.remove("revving");
+      const badge = document.getElementById("turbo-badge");
+      if (badge) badge.textContent = "IDLE";
+      audioEngine.releaseRev();
+    }
+  });
+}
 
-  const actions = document.createElement("div");
-  actions.className = "turbo-audio-actions";
+function updateSoundToolbtnBadge() {
+  const soundBtn = document.querySelector('.toolbtn[data-category="sound"]');
+  if (!soundBtn) return;
+  soundBtn.classList.toggle("engine-on", Boolean(audioEngine && audioEngine.isRunning));
+}
+
+function renderSoundRow(container) {
+  if (!audioEngine) initTurboAudio();
+  const profile = audioEngine.profile;
+
+  const row = document.createElement("div");
+  row.className = "sound-toolbar-row";
+
+  const label = document.createElement("span");
+  label.className = "swatch-row-label";
+  label.textContent = "Turbo Sound";
+  row.appendChild(label);
+
+  const title = document.createElement("span");
+  title.className = "sound-engine-title";
+  title.textContent = profile.engineTitle;
+  row.appendChild(title);
+
+  const badge = document.createElement("span");
+  badge.className = "turbo-audio-badge" + (audioEngine.isRunning ? " active" : "");
+  badge.id = "turbo-badge";
+  badge.textContent = audioEngine.isRunning ? (audioEngine.isRevving ? "REV" : "IDLE") : "OFF";
+  row.appendChild(badge);
 
   const igniteBtn = document.createElement("button");
-  igniteBtn.className = "turbo-btn btn-ignite";
-  igniteBtn.textContent = "Start Engine";
+  igniteBtn.className = "turbo-btn btn-ignite" + (audioEngine.isRunning ? " running" : "");
+  igniteBtn.textContent = audioEngine.isRunning ? "Stop Engine" : "Start Engine";
+  row.appendChild(igniteBtn);
 
   const revBtn = document.createElement("button");
   revBtn.className = "turbo-btn btn-rev";
   revBtn.textContent = "Rev (Hold)";
-  revBtn.disabled = true;
+  revBtn.disabled = !audioEngine.isRunning;
   revBtn.title = "Click & hold or press Spacebar to rev";
-
-  actions.appendChild(igniteBtn);
-  actions.appendChild(revBtn);
-  bar.appendChild(actions);
+  row.appendChild(revBtn);
 
   const meter = document.createElement("div");
-  meter.className = "turbo-rpm-meter";
+  meter.className = "turbo-rpm-meter-dock";
+  const curRpm = audioEngine.currentRpm || 0;
+  const pct = Math.min(100, Math.max(0, (curRpm / profile.maxRpm) * 100));
   meter.innerHTML = `
-    <div class="turbo-rpm-text">
+    <div class="turbo-rpm-text-dock">
       <span>RPM</span>
-      <span id="turbo-rpm-num">0</span>
+      <span id="turbo-rpm-num">${curRpm}</span>
     </div>
-    <div class="turbo-rpm-bar-track">
-      <div class="turbo-rpm-bar-fill" id="turbo-rpm-fill"></div>
+    <div class="turbo-rpm-bar-track-dock">
+      <div class="turbo-rpm-bar-fill-dock" id="turbo-rpm-fill" style="width: ${pct}%"></div>
     </div>
   `;
-  bar.appendChild(meter);
+  row.appendChild(meter);
 
-  getRightSidebar().appendChild(bar);
-
-  const badge = document.getElementById("turbo-badge");
-  const rpmNum = document.getElementById("turbo-rpm-num");
-  const rpmFill = document.getElementById("turbo-rpm-fill");
-
-  audioEngine.onRpmChange = (rpm) => {
-    rpmNum.textContent = rpm;
-    const pct = Math.min(100, Math.max(0, (rpm / profile.maxRpm) * 100));
-    rpmFill.style.width = pct + "%";
-  };
+  container.appendChild(row);
 
   igniteBtn.addEventListener("click", () => {
     const running = audioEngine.toggleEngine();
@@ -1763,9 +1739,12 @@ function addTurboAudioControls() {
       badge.textContent = "OFF";
       badge.classList.remove("active");
       revBtn.disabled = true;
-      rpmNum.textContent = "0";
-      rpmFill.style.width = "0%";
+      const rpmNum = document.getElementById("turbo-rpm-num");
+      const rpmFill = document.getElementById("turbo-rpm-fill");
+      if (rpmNum) rpmNum.textContent = "0";
+      if (rpmFill) rpmFill.style.width = "0%";
     }
+    updateSoundToolbtnBadge();
   });
 
   const startRev = (e) => {
@@ -1788,20 +1767,74 @@ function addTurboAudioControls() {
   window.addEventListener("mouseup", endRev);
   revBtn.addEventListener("touchstart", startRev, { passive: false });
   window.addEventListener("touchend", endRev);
+}
 
-  // Spacebar revving support
-  window.addEventListener("keydown", (e) => {
-    if (e.code === "Space" && (e.target === document.body || e.target === viewerEl) && audioEngine.isRunning && !audioEngine.isRevving) {
-      e.preventDefault();
-      startRev(e);
+function renderAmbienceRow(container) {
+  const row = document.createElement("div");
+  row.className = "ambience-toolbar-row";
+
+  const label = document.createElement("span");
+  label.className = "swatch-row-label";
+  label.textContent = "Ambience";
+  row.appendChild(label);
+
+  const nightBtn = document.createElement("button");
+  nightBtn.className = "atmo-btn btn-night" + (isMidnightMode ? " active" : "");
+  nightBtn.textContent = isMidnightMode ? "☀️ Daylight" : "🌙 Midnight";
+  nightBtn.title = "Switch between Day and Midnight Garage mode";
+  row.appendChild(nightBtn);
+
+  const divider = document.createElement("span");
+  divider.className = "swatch-row-label swatch-row-label-sub";
+  divider.textContent = "Underglow";
+  row.appendChild(divider);
+
+  const labelText = document.createElement("span");
+  labelText.className = "underglow-label-status";
+  const activeObj = UNDERGLOW_COLORS.find((c) => c.hex === activeUnderglowColor);
+  labelText.textContent = activeObj ? activeObj.name : "Off";
+  row.appendChild(labelText);
+
+  const swatchesEl = document.createElement("div");
+  swatchesEl.className = "underglow-swatches-dock";
+
+  UNDERGLOW_COLORS.forEach((item) => {
+    const swatch = document.createElement("button");
+    swatch.dataset.color = item.hex;
+    swatch.title = `Underglow: ${item.name}`;
+    const isActive = (item.hex === "none" && (!activeUnderglowColor || activeUnderglowColor === "none")) || (activeUnderglowColor === item.hex);
+    if (item.hex === "none") {
+      swatch.className = "underglow-swatch underglow-swatch-none" + (isActive ? " active" : "");
+    } else {
+      swatch.className = "underglow-swatch" + (isActive ? " active" : "");
+      swatch.style.backgroundColor = item.hex;
+    }
+    swatch.addEventListener("click", () => {
+      setUnderglow(item.hex);
+      swatchesEl.querySelectorAll(".underglow-swatch").forEach((el) => {
+        el.classList.toggle("active", el.dataset.color === item.hex);
+      });
+      labelText.textContent = item.name;
+    });
+    swatchesEl.appendChild(swatch);
+  });
+  row.appendChild(swatchesEl);
+
+  nightBtn.addEventListener("click", () => {
+    const nextState = !isMidnightMode;
+    setMidnightMode(nextState);
+    nightBtn.classList.toggle("active", nextState);
+    nightBtn.textContent = nextState ? "☀️ Daylight" : "🌙 Midnight";
+    if (nextState && (!activeUnderglowColor || activeUnderglowColor === "none")) {
+      setUnderglow("#00f0ff");
+      swatchesEl.querySelectorAll(".underglow-swatch").forEach((el) => {
+        el.classList.toggle("active", el.dataset.color === "#00f0ff");
+      });
+      labelText.textContent = "Cyan";
     }
   });
-  window.addEventListener("keyup", (e) => {
-    if (e.code === "Space" && audioEngine.isRunning && audioEngine.isRevving) {
-      e.preventDefault();
-      endRev(e);
-    }
-  });
+
+  container.appendChild(row);
 }
 
 function applyPreselectedOptions() {
@@ -1845,8 +1878,7 @@ function onModelReady() {
   frameCameraFromDirection(VIEW_DIRECTIONS.front);
   addViewPresetButtons();
   addSaveControls();
-  addTurboAudioControls();
-  addAtmosphereControls();
+  initTurboAudio();
   buildOptionsPanel();
   applyPreselectedOptions();
 }
