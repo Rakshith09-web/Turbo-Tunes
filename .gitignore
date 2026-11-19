@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 db.sqlite3
+*.bak
 media/
 
 # Raw asset downloads (already processed into cars/seed_assets/) — large, not needed by the app.
