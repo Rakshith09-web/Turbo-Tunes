@@ -1617,11 +1617,16 @@ function setMidnightMode(enabled) {
 const UNDERGLOW_COLORS = [
   { name: "Off", hex: "none" },
   { name: "Cyan", hex: "#00f0ff" },
-  { name: "Purple", hex: "#d946ef" },
+  { name: "Mint", hex: "#10b981" },
   { name: "Lime", hex: "#22c55e" },
+  { name: "Electric Gold", hex: "#facc15" },
   { name: "Amber", hex: "#f97316" },
   { name: "Red", hex: "#ef4444" },
+  { name: "Hot Pink", hex: "#ec4899" },
+  { name: "Purple", hex: "#d946ef" },
+  { name: "Ultraviolet", hex: "#7c3aed" },
   { name: "Blue", hex: "#3b82f6" },
+  { name: "Ice White", hex: "#f8fafc" },
 ];
 
 let audioEngine = null;
