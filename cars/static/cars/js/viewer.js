@@ -245,7 +245,7 @@ function frameCameraFromDirection(direction) {
   if (!bounds) return;
   const { center, maxDim } = bounds;
   const overhead = Math.abs(direction.y) > 0.9;
-  const distance = maxDim * (overhead ? 1.95 : 1.65);
+  const distance = maxDim * (overhead ? 2.35 : 2.05);
 
   controls.minDistance = 0.35;
   controls.maxDistance = maxZoomDistance(maxDim);
@@ -333,7 +333,7 @@ function boxOf(objects) {
 }
 
 // How far back the camera must be for `width` x `height` metres to fill the view.
-function fitDistance(width, height, margin = 1.15) {
+function fitDistance(width, height, margin = 1.35) {
   const halfV = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   const byHeight = (height * margin) / (2 * halfV);
   const byWidth = (width * margin) / (2 * halfV * camera.aspect);
