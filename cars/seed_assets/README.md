@@ -70,6 +70,13 @@ palette image, so:
   unprocessed download it has no separate wheel geometry at all. On the SUV, the wheel mesh
   also carries the brake calipers/discs (one shared material in the source model), so wheel
   colour tints brakes along with the rims — a minor, accepted trade-off.
+- **Rims** (a tab next to Wheels): *Stock* keeps the model's own rims; *Multi-Spoke*, *Turbine*, *Mesh*
+  and *Hex Pocket* are built in code by `static/cars/js/rims.js`. Each design hides the stock rim
+  mesh and fits a new rim on every wheel (the wheels are found by which quarter of the car the stock
+  rim vertices lie in), same axle and outer radius, so the tyre still meets it and the brake discs
+  show through the spokes. The Wheels colour paints whichever rim is fitted, never the tyre. The
+  sedan and sports sedan rim meshes carry a thin ring of tyre rubber, so their true rim radius is
+  measured and kept in `RIM_RADIUS` in `rims.js`. Not on the Future Racer (no separate rim mesh).
 - **Spoiler** is a *style* choice plus a separate *finish* choice (body match / gloss black /
   carbon fibre; the `spoiler` and `spoiler_finish` option types). Styles come in two kinds:
   - **Generated** (all of the Sedan's, and most of the Sports Sedan's and Sports Hatchback's):
@@ -93,9 +100,12 @@ palette image, so:
     `optimize`'s `dedup` step — which runs *before* `join` — immediately merges an
     identical-content clone straight back) before running the rest of the pipeline, so `join`
     sees it as a distinct material and leaves it as its own mesh.
-- **Decals** project onto each car's own paint mesh from directly above (`applyDecal` in
-  `viewer.js`), reusing the same single-mesh target as paint — works on all 5 cars since each
-  ended up with exactly one paint mesh after processing.
+- **Decals** project onto each car's own paint mesh (`applyDecal` in `viewer.js`): from above onto
+  the hood, roof and boot, and sideways onto the doors and fenders — reusing the same single-mesh
+  target as paint, which works on all 5 cars since each ended up with exactly one paint mesh after
+  processing. Every car offers the same five liveries (the ones the project owner chose, redrawn as
+  vector art by `make_decals.py` into `textures/decals/nfs/`) plus "None"; the Future Racer only
+  gets the top artwork because its flanks are open wheels and tyres.
 - **Exhaust** tips are generated in code (`mesh_name` starting with `generated:`) from the
   car's bounding box, so they work unchanged regardless of the underlying model.
 - **Interior** is not seeded, though these models (unlike the Kenney set) do have real interior

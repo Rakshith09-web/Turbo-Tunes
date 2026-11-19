@@ -44,6 +44,7 @@ class CustomizationOption(models.Model):
     class OptionType(models.TextChoices):
         PAINT = "paint", "Paint Colour"
         WHEELS = "wheels", "Wheels"
+        RIMS = "rims", "Rims"
         DECAL = "decal", "Decal"
         INTERIOR = "interior", "Interior Colour"
         EXHAUST = "exhaust", "Exhaust"

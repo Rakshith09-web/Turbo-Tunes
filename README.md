@@ -3,8 +3,8 @@
 An interactive 3D car customization website (Django + Three.js). Final-year BCA project.
 
 Visitors open the site and land straight in a 3D showroom. They can rotate the car to any angle, jump to
-front/rear/left/right/top/bottom views, and customize paint, wheels (rim colour), exhaust tips, spoilers (style and finish) and decals live, inside a
-3D garage.
+front/rear/left/right/top/bottom views, and customize paint, wheels (rim colour), rim designs, exhaust tips, spoilers (style and finish) and decals live, inside
+a 3D garage. The camera glides to the part being changed so the change is easy to see.
 Logged-in users can save builds to "My Garage" and reopen them later.
 
 ## Tech stack

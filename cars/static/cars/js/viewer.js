@@ -6,6 +6,7 @@ import { createPalettePainter } from "./palette.js";
 import { TurboAudioEngine } from "./turbo_audio.js";
 import { buildGarage } from "./garage.js";
 import { buildSpoilerStyle, makeSpoilerMaterial, SPOILER_RECIPES } from "./spoilers.js";
+import { buildRimSet, makeRimMaterial } from "./rims.js";
 
 const carData = JSON.parse(document.getElementById("car-data").textContent);
 const viewerEl = document.getElementById("viewer");
@@ -316,6 +317,113 @@ function focusCameraOn(targetPoint, distance = 1.45) {
   focusTween.targetTarget.copy(targetPoint);
   focusTween.targetPos.copy(targetPoint.clone().add(dir.multiplyScalar(distance)));
   focusTween.startTime = performance.now();
+  focusTween.duration = 600;
+  focusTween.active = true;
+}
+
+// ---- Showing off a change ------------------------------------------------------------------
+// When someone changes something, the camera glides to where that change can be seen: the side
+// of the car for wheels and decals, the back for exhaust and spoilers, a three-quarter view for
+// paint. Each is a pose (where to look, from which direction, how far), worked out from the
+// parts themselves so it suits every car.
+function boxOf(objects) {
+  const box = new THREE.Box3();
+  objects.forEach((o) => box.expandByObject(o));
+  return box.isEmpty() ? null : box;
+}
+
+// How far back the camera must be for `width` x `height` metres to fill the view.
+function fitDistance(width, height, margin = 1.15) {
+  const halfV = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  const byHeight = (height * margin) / (2 * halfV);
+  const byWidth = (width * margin) / (2 * halfV * camera.aspect);
+  return Math.max(byHeight, byWidth);
+}
+
+function focusPoseFor(type, side) {
+  const bounds = getCarBounds();
+  if (!bounds) return null;
+  const { box, size, center } = bounds;
+  const at = (x, y, z) => new THREE.Vector3(x, y, z);
+  const dir = (x, y, z) => new THREE.Vector3(x, y, z).normalize();
+
+  if (type === "paint") {
+    // three-quarter front, close enough that the colour fills the screen
+    return { target: at(center.x, box.min.y + size.y * 0.42, center.z + size.z * 0.04), direction: dir(side * 0.78, 0.2, 0.62), distance: fitDistance(size.z * 0.8, size.y * 1.4) };
+  }
+
+  if (type === "wheels") {
+    // side profile, close in on the front wheel
+    const option = (optionsByType.wheels || [])[0];
+    const meshes = option ? meshesMatchingNames(option.mesh_name) : [];
+    const wheels = boxOf(meshes);
+    let target = at(side > 0 ? box.max.x : box.min.x, box.min.y + size.y * 0.22, center.z + size.z * 0.3);
+    let rim = size.y * 0.4;
+    if (wheels) {
+      const diameter = wheels.max.y - wheels.min.y;
+      const several = wheels.max.z - wheels.min.z > diameter * 1.6; // all four wheels in one mesh
+      target = at(side > 0 ? wheels.max.x : wheels.min.x, (wheels.min.y + wheels.max.y) / 2, several ? wheels.max.z - diameter / 2 : (wheels.min.z + wheels.max.z) / 2);
+      rim = diameter;
+    }
+    return { target, direction: dir(side, 0.06, 0), distance: THREE.MathUtils.clamp(rim * 3.2, 1.7, 2.8) };
+  }
+
+  if (type === "exhaust") {
+    // straight behind and low, wide enough to take in the whole bumper
+    return { target: at(center.x, box.min.y + size.y * 0.27, box.min.z + size.z * 0.02), direction: dir(0, 0.16, -1), distance: fitDistance(size.x, size.y * 0.55, 1.2) };
+  }
+
+  if (type === "decal") {
+    // the whole side of the car, filling the view (the near flank is half a car-width closer
+    // to the camera than the car's centre, hence the extra distance)
+    return { target: at(center.x, box.min.y + size.y * 0.45, center.z), direction: dir(side, 0.05, 0), distance: fitDistance(size.z, size.y, 1.1) + size.x * 0.5 };
+  }
+
+  if (type === "spoiler") {
+    // behind and a little above, centred on the spoiler itself
+    const parts = [];
+    const generated = carRoot.getObjectByName("GeneratedSpoiler");
+    if (generated) parts.push(generated);
+    stockSpoilerMeshes().filter((m) => m.visible).forEach((m) => parts.push(m));
+    const spoiler = boxOf(parts);
+    const targetY = spoiler ? (spoiler.min.y + spoiler.max.y) / 2 : box.min.y + size.y * 0.72;
+    const width = spoiler ? Math.max(spoiler.max.x - spoiler.min.x, 0.9) : size.x * 0.6;
+    return { target: at(center.x, targetY, spoiler ? (spoiler.min.z + spoiler.max.z) / 2 : box.min.z + size.z * 0.1), direction: dir(0, 0.3, -1), distance: fitDistance(width * 1.5, width * 0.9, 1.25) };
+  }
+  return null;
+}
+
+function focusOnChange(type) {
+  if (!carRoot) return;
+  if (type === "spoiler_finish") type = "spoiler";
+  if (type === "rims") type = "wheels";
+  // stay on whichever side of the car the viewer is already on
+  const centre = carBounds ? carBounds.center : new THREE.Vector3();
+  const side = camera.position.x >= centre.x ? 1 : -1;
+  const pose = focusPoseFor(type, side);
+  if (!pose) return;
+
+  if (isInteriorMode) {
+    isInteriorMode = false;
+    if (cabinLight) cabinLight.visible = false;
+    if (cabinFill) cabinFill.visible = false;
+  }
+  document.querySelectorAll(".view-presets button").forEach((b) => b.classList.remove("active"));
+
+  const targetPos = pose.target.clone().add(pose.direction.clone().multiplyScalar(pose.distance));
+  // Already looking at it from about the right place (say, while flicking through colours)?
+  // Then leave the camera alone instead of snapping the viewer back.
+  const here = camera.position.clone().sub(controls.target);
+  const wanted = targetPos.clone().sub(pose.target);
+  const angle = here.angleTo(wanted);
+  if (angle < 0.4 && Math.abs(here.length() / wanted.length() - 1) < 0.3 && controls.target.distanceTo(pose.target) < wanted.length() * 0.3) return;
+
+  focusTween.startPos.copy(camera.position);
+  focusTween.startTarget.copy(controls.target);
+  focusTween.targetPos.copy(targetPos);
+  focusTween.targetTarget.copy(pose.target);
+  focusTween.startTime = performance.now();
+  focusTween.duration = 850;
   focusTween.active = true;
 }
 
@@ -734,6 +842,10 @@ async function applyWheels(option) {
       return false;
     }
     targets.forEach((target) => tintMesh(target, option.color_hex));
+    // The colour belongs to the rims only (never the tyres): the stock rim mesh above, and the rim
+    // design built in code if one is fitted.
+    wheelColorHex = option.color_hex;
+    if (activeRimMaterial) activeRimMaterial.color.set(option.color_hex);
     return true;
   }
   // Older Kenney-style cars: swap in a whole alternate wheel shape, or show/hide a stock set.
@@ -743,6 +855,52 @@ async function applyWheels(option) {
     return true;
   }
   return showOnly(option);
+}
+
+// ---- Rim designs -------------------------------------------------------------------------
+// "Stock" keeps the model's own rims. Any other style hides them and fits a design built in code
+// (rims.js) in the same place on each wheel; the Wheels colour then paints that rim, not the tyre.
+let rimStyle = null;
+let wheelColorHex = null;
+let activeRimMaterial = null;
+
+function stockRimMeshes() {
+  const wheel = (optionsByType.wheels || [])[0];
+  return wheel ? meshesMatchingNames(wheel.mesh_name) : [];
+}
+
+function removeGeneratedRims() {
+  const old = carRoot.getObjectByName("GeneratedRims");
+  if (!old) return;
+  old.traverse((o) => o.geometry && o.geometry.dispose());
+  if (activeRimMaterial) activeRimMaterial.dispose();
+  activeRimMaterial = null;
+  carRoot.remove(old);
+}
+
+function refreshRims() {
+  removeGeneratedRims();
+  const stock = stockRimMeshes();
+  const key = rimStyle ? rimStyle.mesh_name.split(":")[1] : "stock";
+  if (key === "stock") {
+    stock.forEach((mesh) => (mesh.visible = true));
+    return;
+  }
+  activeRimMaterial = makeRimMaterial(wheelColorHex || "#B8BCC0", getExhaustEnvMap());
+  const set = buildRimSet(carRoot, stock, key, activeRimMaterial, carData.name);
+  if (set) {
+    carRoot.add(set);
+    stock.forEach((mesh) => (mesh.visible = false));
+  } else {
+    console.warn(`Couldn't build the "${key}" rim design for ${carData.name}.`);
+    stock.forEach((mesh) => (mesh.visible = true));
+  }
+}
+
+function applyRims(option) {
+  rimStyle = option;
+  refreshRims();
+  return true;
 }
 
 // ---- Exhaust -----------------------------------------------------------------------------
@@ -1132,7 +1290,7 @@ async function applyDecal(option) {
 }
 
 // ---- Applying an option ------------------------------------------------------------------
-async function applyOption(option) {
+async function applyOption(option, { focus = false } = {}) {
   if (!carRoot) return;
 
   let applied = false;
@@ -1140,6 +1298,7 @@ async function applyOption(option) {
   else if (option.option_type === "interior") applied = applyInterior(option);
   else if (option.option_type === "decal") applied = await applyDecal(option);
   else if (option.option_type === "wheels") applied = await applyWheels(option);
+  else if (option.option_type === "rims") applied = applyRims(option);
   else if (option.option_type === "exhaust") applied = applyExhaust(option);
   else if (option.option_type === "spoiler") applied = applySpoiler(option);
   else if (option.option_type === "spoiler_finish") applied = applySpoilerFinish(option);
@@ -1151,6 +1310,7 @@ async function applyOption(option) {
     .forEach((sibling) => selectedOptionIds.delete(sibling.id));
 
   refreshPanelSelection();
+  if (focus) focusOnChange(option.option_type);
 }
 
 function refreshPanelSelection() {
@@ -1163,6 +1323,7 @@ function refreshPanelSelection() {
 const CATEGORY_LABELS = {
   paint: "Paint",
   wheels: "Wheels",
+  rims: "Rims",
   interior: "Interior",
   exhaust: "Exhaust",
   decal: "Decals",
@@ -1175,6 +1336,8 @@ const CATEGORY_ICONS = {
     '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>',
   wheels:
     '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5 L12 8.5 M12 15.5 L12 20.5 M3.5 12 L8.5 12 M15.5 12 L20.5 12 M6 6 L9.5 9.5 M14.5 14.5 L18 18 M18 6 L14.5 9.5 M9.5 14.5 L6 18"/></svg>',
+  rims:
+    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.2"/><path d="M12 9.8 L9.2 4.2 M13.9 11 L19.8 9.4 M13.2 13.6 L16.8 18.7 M10.8 13.6 L7.2 18.7 M10.1 11 L4.2 9.4"/></svg>',
   interior:
     '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19 L5 12 C5 8 8 5.5 12 5.5 C16 5.5 19 8 19 12 L19 19"/><path d="M5 19 L19 19"/><path d="M7 19 L7 15.5 C7 13.8 8.5 12.5 10 12.5 L14 12.5 C15.5 12.5 17 13.8 17 15.5 L17 19"/></svg>',
   exhaust:
@@ -1192,7 +1355,11 @@ function buildOptionsPanel() {
   panel.innerHTML = "";
 
   // spoiler_finish isn't a tab of its own: its swatches sit in the Spoiler tab after the styles
-  const types = Object.keys(optionsByType).filter((type) => type !== "spoiler_finish");
+  const TAB_ORDER = ["paint", "wheels", "rims", "interior", "exhaust", "decal", "spoiler"];
+  const rank = (t) => (TAB_ORDER.includes(t) ? TAB_ORDER.indexOf(t) : TAB_ORDER.length);
+  const types = Object.keys(optionsByType)
+    .filter((type) => type !== "spoiler_finish")
+    .sort((a, b) => rank(a) - rank(b));
   if (types.length === 0) return;
   activeCategory = types.includes(activeCategory) ? activeCategory : types[0];
 
@@ -1260,7 +1427,7 @@ function renderSwatchRow() {
       el.className = "option-pill";
       el.textContent = option.label;
     }
-    el.addEventListener("click", () => applyOption(option));
+    el.addEventListener("click", () => applyOption(option, { focus: true }));
     swatchRow.appendChild(el);
   });
 
@@ -1278,7 +1445,7 @@ function renderSwatchRow() {
       el.className = "swatch";
       el.style.backgroundColor = option.color_hex;
       if (option.mesh_name === "finish:carbon") el.classList.add("swatch-carbon");
-      el.addEventListener("click", () => applyOption(option));
+      el.addEventListener("click", () => applyOption(option, { focus: true }));
       swatchRow.appendChild(el);
     });
   }

@@ -37,7 +37,7 @@ class SeedDemoCarsCommandTests(TestCase):
         self.assertTrue(sedan.thumbnail.name.endswith(".png"))
         self.assertTrue(all(car.thumbnail for car in Car.objects.filter(brand="AutoCraft")))
         types = set(sedan.options.values_list("option_type", flat=True))
-        self.assertEqual(types, {"paint", "wheels", "exhaust", "decal", "spoiler", "spoiler_finish"})
+        self.assertEqual(types, {"paint", "wheels", "rims", "exhaust", "decal", "spoiler", "spoiler_finish"})
         self.assertNotIn("exhaust", set(Car.objects.get(name="SUV").options.values_list("option_type", flat=True)))
 
     def test_paint_options_all_target_the_cars_own_paint_mesh(self):
@@ -56,6 +56,28 @@ class SeedDemoCarsCommandTests(TestCase):
         self.assertTrue(all(w.color_hex for w in wheels))
         self.assertTrue(all(not w.part_file for w in wheels))
         self.assertTrue({"Gold", "Candy Red", "Satin White"} <= {w.label for w in wheels})
+
+    def test_cars_with_wheels_get_the_four_rim_designs_and_a_stock_choice(self):
+        call_command("seed_demo_cars", verbosity=0)
+
+        for name in ["Sedan", "Sports Sedan", "SUV", "Sports Hatchback"]:
+            rims = Car.objects.get(name=name).options.filter(option_type="rims")
+            self.assertEqual(
+                {o.mesh_name for o in rims},
+                {"rims:stock", "rims:multispoke", "rims:turbine", "rims:mesh", "rims:hex"},
+                name,
+            )
+        # no rim mesh on the Future Racer, so no wheels and no rim designs
+        self.assertFalse(Car.objects.get(name="Future Racer").options.filter(option_type__in=["wheels", "rims"]).exists())
+
+    def test_every_rim_design_is_defined_in_the_viewer(self):
+        from pathlib import Path
+
+        js = (Path(__file__).resolve().parent / "static" / "cars" / "js" / "rims.js").read_text(encoding="utf-8")
+        call_command("seed_demo_cars", verbosity=0)
+        for option in CustomizationOption.objects.filter(option_type="rims").exclude(mesh_name="rims:stock"):
+            key = option.mesh_name.split(":")[1]
+            self.assertIn(f"  {key}(R, depth)", js, f"no rim design '{key}' in rims.js")
 
     def test_every_car_but_the_suv_has_finish_options_for_its_exhaust_tips(self):
         call_command("seed_demo_cars", verbosity=0)
@@ -103,23 +125,37 @@ class SeedDemoCarsCommandTests(TestCase):
         self.assertTrue(any(d.texture_file for d in decals))
         self.assertTrue(any(not d.texture_file for d in decals))
 
-    def test_every_car_has_its_own_four_decal_designs_on_top_of_the_shared_ones(self):
+    def test_every_car_offers_exactly_the_five_chosen_liveries_plus_none(self):
         call_command("seed_demo_cars", verbosity=0)
 
-        designs = {}
+        expected = {"None", "Most Wanted", "Green Machine", "Hatch 28", "Heat RSR", "Flame Run"}
         for car in Car.objects.filter(brand="AutoCraft"):
             labels = set(car.options.filter(option_type="decal").values_list("label", flat=True))
-            self.assertEqual(len(labels), 6, car.name)  # None + Racing Stripes + 4 of its own
-            designs[car.name] = labels - {"None", "Racing Stripes"}
-        self.assertEqual(len(set().union(*designs.values())), 20)  # no design is shared between cars
+            self.assertEqual(labels, expected, car.name)
+
+    def test_old_decals_are_removed_when_reseeding(self):
+        call_command("seed_demo_cars", verbosity=0)
+        sedan = Car.objects.get(name="Sedan")
+        for label in ["Racing Stripes", "Street Claw"]:
+            CustomizationOption.objects.create(car=sedan, option_type="decal", label=label, mesh_name="x")
+
+        call_command("seed_demo_cars", verbosity=0)
+
+        labels = set(sedan.options.filter(option_type="decal").values_list("label", flat=True))
+        self.assertNotIn("Racing Stripes", labels)
+        self.assertNotIn("Street Claw", labels)
 
     def test_flank_artwork_is_seeded_in_both_directions_except_on_the_open_wheel_racer(self):
         call_command("seed_demo_cars", verbosity=0)
 
-        sedan = Car.objects.get(name="Sedan").options.get(option_type="decal", label="Street Claw")
-        self.assertTrue(sedan.side_texture_file and sedan.side_texture_flipped_file)
-        racer = Car.objects.get(name="Future Racer").options.filter(option_type="decal")
-        self.assertTrue(racer.filter(label="Plasma Flames").exclude(texture_file="").exists())
+        for name in ["Sedan", "Sports Sedan", "SUV", "Sports Hatchback"]:
+            decals = Car.objects.get(name=name).options.filter(option_type="decal").exclude(label="None")
+            self.assertEqual(decals.count(), 5, name)
+            for decal in decals:
+                self.assertTrue(decal.texture_file and decal.side_texture_file and decal.side_texture_flipped_file, f"{name}: {decal.label}")
+        racer = Car.objects.get(name="Future Racer").options.filter(option_type="decal").exclude(label="None")
+        self.assertEqual(racer.count(), 5)
+        self.assertTrue(all(d.texture_file for d in racer))
         self.assertFalse(any(d.side_texture_file for d in racer))
 
     def test_the_three_road_cars_each_get_four_or_more_spoiler_styles_and_three_finishes(self):

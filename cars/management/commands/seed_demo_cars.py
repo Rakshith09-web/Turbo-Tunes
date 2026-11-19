@@ -20,7 +20,7 @@ ASSETS = Path(__file__).resolve().parents[2] / "seed_assets"
 # part, offered as the "stock" choice. A finish (body match / gloss black / carbon) is picked
 # separately, from SPOILER_FINISHES.
 CARS = [
-    {"decals": "sedan", "name": "Sedan", "thumb": "sedan.png", "file": "sedan.glb", "featured": True,
+    {"name": "Sedan", "thumb": "sedan.png", "file": "sedan.glb", "featured": True,
      "paint_mesh": "bPaint_Geo_lodA_Paint_Geo_lodA_BMW_M5SedanRewardRecycled_2024Paint_Material_bBMW_M5SedanRewardRecycled_2024Paint_Material1_0",
      # The source model welds the tire and rim into one shell sharing one material, so recolouring
      # that mesh turned the whole wheel. BMW_WheelRim_1 is the rim split out of it (by distance
@@ -33,7 +33,7 @@ CARS = [
                   ("Track Wing", "generated:gt_wing")],
      "description": "A balanced everyday four-door.",
      "long_description": "Four doors, a proper boot and a calm, upright shape. It is the easy everyday pick, and a clean canvas for paint."},
-    {"decals": "sports_sedan", "name": "Sports Sedan", "thumb": "sports-sedan.png", "file": "sedan-sports.glb",
+    {"name": "Sports Sedan", "thumb": "sports-sedan.png", "file": "sedan-sports.glb",
      "paint_mesh": "porschePaint_Geo_lodA_Paint_Geo_lodA_Porsche_TaycanTurboGTReward_2025Paint_Material_porschePorsche_TaycanTurboGTReward_2025Paint_Material1_0",
      # Same story as the BMW: tire and rim were one welded shell, so the four Porsche_WheelRim_*
      # nodes are the rims split out of the four wheel meshes.
@@ -47,7 +47,7 @@ CARS = [
                   ("Ducktail", "generated:ducktail")],
      "description": "A sportier sedan-coupe with serious performance.",
      "long_description": "Low, wide and built for speed, with a fixed rear wing. Add a bold colour and a set of exhaust tips and it is ready for the weekend."},
-    {"decals": "suv", "name": "SUV", "thumb": "suv.png", "file": "suv.glb",
+    {"name": "SUV", "thumb": "suv.png", "file": "suv.glb",
      "paint_mesh": "fender-front-arch-right_body_0",
      # The rims shared one mesh with the brake calipers/discs; SUV_WheelRim_1 is the four rim
      # shells split out of it, so wheel colour no longer tints the brakes.
@@ -56,7 +56,7 @@ CARS = [
      "exhaust": False,
      "description": "Tall, roomy and ready for anything.",
      "long_description": "A tall, rugged body built for comfort over rough roads. Try a deep green or graphite finish."},
-    {"decals": "hatchback", "name": "Sports Hatchback", "thumb": "sports-hatchback.png", "file": "hatchback-sports.glb",
+    {"name": "Sports Hatchback", "thumb": "sports-hatchback.png", "file": "hatchback-sports.glb",
      "paint_mesh": "A45SK_Hood_101_SK_Hood_101_MI_1236020001_004_A45MI_1236020001_002_0",
      "wheel_mesh": "A45Ani_Wheel_BR112_A45MI_ChangeA_Rim1_0",
      # A real, separate roof-spoiler part — reprocessed to keep it out of the join step that
@@ -73,7 +73,7 @@ CARS = [
      ],
      "description": "A compact hot hatch.",
      "long_description": "Compact and easy to park, with sporty lines and a roof spoiler. It is the playful one in the lineup, and bright paint suits it well."},
-    {"decals": "racer", "name": "Future Racer", "thumb": "future-racer.png", "file": "race-future.glb",
+    {"name": "Future Racer", "thumb": "future-racer.png", "file": "race-future.glb",
      "paint_mesh": "Object_4",
      # No wheel_mesh: this model has no separate wheel geometry at all, even in the raw
      # unprocessed download — it's one fused surface, so there's nothing to target separately.
@@ -81,6 +81,7 @@ CARS = [
      # Already has its own built-in rear wing as part of the model — a generated one on top
      # would look redundant.
      "spoilers": None,
+     "decal_flanks": False,
      "description": "A low, wide open-wheel track machine.",
      "long_description": "An open-wheel racer built for the track, with wings at both ends. It is the most dramatic car here: pick a loud colour and fit a titanium tailpipe."},
 ]
@@ -105,6 +106,16 @@ WHEEL_COLORS = [
     ("Satin White", "#E6E6E1"),
 ]
 
+# Rim designs are built in code (static/cars/js/rims.js) and fitted to each car's own wheels; "Stock"
+# keeps the model's own rims. Only cars with a separate rim mesh get them (not the Future Racer).
+RIM_STYLES = [
+    ("Stock", "rims:stock"),
+    ("Multi-Spoke", "rims:multispoke"),
+    ("Turbine", "rims:turbine"),
+    ("Mesh", "rims:mesh"),
+    ("Hex Pocket", "rims:hex"),
+]
+
 # "generated:" options are built in code (see viewer.js buildExhaust): the tips are placed where
 # each car's own bumper has (or would have) its exhaust and finished in chrome, black or titanium.
 # "Stock" adds nothing, so the model's own tips (the sedan and hatchback have them baked in) show.
@@ -117,28 +128,19 @@ EXHAUSTS = [
 ]
 
 # Decals are projected onto the car's own paint mesh (see viewer.js's applyDecal): from above onto the
-# hood, roof and boot, and, where a design has flank artwork, sideways onto the doors and fenders.
-# Every car gets "None" and the shared "Racing Stripes", plus designs of its own that suit it. The
-# artwork is drawn by cars/seed_assets/make_decals.py into textures/decals/<folder>/<slug>_*.png.
-BASE_DECALS = [
-    ("None", None),
-    ("Racing Stripes", "racing_stripes.png"),
+# hood, roof and boot, and sideways onto the doors and fenders. They are the five liveries the project
+# owner chose (redrawn by cars/seed_assets/make_decals.py into textures/decals/nfs/<slug>_*.png) and
+# every car offers the same five, plus "None" to take a decal off. Nothing else is kept: the older
+# per-car designs and the plain racing stripes are gone, and re-seeding removes any left in a database.
+# The Future Racer only gets the top artwork, because its flanks are open wheels and tyres.
+DECAL_DIR = ASSETS / "textures" / "decals" / "nfs"
+DECALS = [
+    ("Most Wanted", "most_wanted"),
+    ("Green Machine", "logy_green"),
+    ("Hatch 28", "gti_28"),
+    ("Heat RSR", "heat_rsr"),
+    ("Flame Run", "flame_run"),
 ]
-
-# (label, file slug) per car folder. A slug with a *_side.png / *_side_flip.png pair also gets flank
-# artwork; the Future Racer only has top artwork because its flanks are open wheels and tyres.
-CAR_DECALS = {
-    "sedan": [("Street Claw", "street_claw"), ("Tri-Stripe", "tri_stripe"),
-              ("Carbon Sport", "carbon_sport"), ("Speed Chevron", "speed_chevron")],
-    "sports_sedan": [("Voltage", "voltage"), ("Heritage Stripe", "heritage_stripe"),
-                     ("Hex Pulse", "hex_pulse"), ("Amber Claw", "amber_claw")],
-    "suv": [("Mud Splash", "mud_splash"), ("Expedition", "expedition"),
-            ("Safari Camo", "safari_camo"), ("Tribal Ridge", "tribal_ridge")],
-    "hatchback": [("Rally Chevron", "rally_chevron"), ("Pixel Fade", "pixel_fade"),
-                  ("Cyan Claw", "cyan_claw"), ("Checker Run", "checker_run")],
-    "racer": [("Plasma Flames", "plasma_flames"), ("Circuit Lines", "circuit_lines"),
-              ("Delta Chevron", "delta_chevron"), ("Number One", "number_one")],
-}
 
 SPOILER_FINISHES = [
     ("Body Match", "finish:body", "#8A9099"),  # follows whatever paint the car currently has
@@ -175,17 +177,17 @@ class Command(BaseCommand):
             # Wheels/spoiler only get seeded when the car actually supports them — drop any
             # left over from an older seeding so a car without one doesn't show a broken tab.
             if not spec["wheel_mesh"]:
-                car.options.filter(option_type="wheels").delete()
+                car.options.filter(option_type__in=["wheels", "rims"]).delete()
             if not spec["spoilers"]:
                 car.options.filter(option_type__in=["spoiler", "spoiler_finish"]).delete()
             if not spec.get("exhaust", True):
                 car.options.filter(option_type="exhaust").delete()
-            self.seed_options(car, spec["paint_mesh"], spec["wheel_mesh"], spec["spoilers"], spec["decals"],
+            self.seed_options(car, spec["paint_mesh"], spec["wheel_mesh"], spec["spoilers"], spec.get("decal_flanks", True),
                               spec.get("exhaust", True))
             if options["verbosity"]:
                 self.stdout.write(f"Seeded {car}")
 
-    def seed_options(self, car, paint_mesh, wheel_mesh, spoilers, decal_folder, exhaust):
+    def seed_options(self, car, paint_mesh, wheel_mesh, spoilers, decal_flanks, exhaust):
         # Every paint swatch targets the same mesh, at a different colour.
         for label, hex_value in PAINTS:
             self.option(car, "paint", label, paint_mesh, color_hex=hex_value)
@@ -193,6 +195,10 @@ class Command(BaseCommand):
         if wheel_mesh:
             for label, hex_value in WHEEL_COLORS:
                 self.option(car, "wheels", label, wheel_mesh, color_hex=hex_value)
+            for label, mesh_name in RIM_STYLES:
+                self.option(car, "rims", label, mesh_name, color_hex="")
+            keep_rims = [label for label, _ in RIM_STYLES]
+            car.options.filter(option_type="rims").exclude(label__in=keep_rims).delete()
 
         if exhaust:
             for label, mesh_name in EXHAUSTS:
@@ -200,13 +206,11 @@ class Command(BaseCommand):
             # Drop the old loose-tube options ("Single Tip", "Dual Tips") from earlier seedings.
             car.options.filter(option_type="exhaust").exclude(label__in=[l for l, _ in EXHAUSTS]).delete()
 
-        decal_dir = ASSETS / "textures" / "decals" / decal_folder
-        designs = [(label, ASSETS / "textures" / filename, None, None) for label, filename in BASE_DECALS if filename]
-        designs = [("None", None, None, None)] + designs
-        for label, slug in CAR_DECALS[decal_folder]:
-            side, flip = decal_dir / f"{slug}_side.png", decal_dir / f"{slug}_side_flip.png"
-            designs.append((label, decal_dir / f"{slug}_top.png", side if side.exists() else None,
-                            flip if flip.exists() else None))
+        designs = [("None", None, None, None)]
+        for label, slug in DECALS:
+            side = DECAL_DIR / f"{slug}_side.png" if decal_flanks else None
+            flip = DECAL_DIR / f"{slug}_side_flip.png" if decal_flanks else None
+            designs.append((label, DECAL_DIR / f"{slug}_top.png", side, flip))
         for label, top, side, flip in designs:
             decal = self.option(car, "decal", label, paint_mesh)
             for field, path in (("texture_file", top), ("side_texture_file", side),
