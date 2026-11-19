@@ -115,6 +115,11 @@ WHEEL_COLORS = [
     ("Gold", "#C4A24E"),
     ("Candy Red", "#A8202B"),
     ("Satin White", "#E6E6E1"),
+    ("Matte Black", "#222326"),
+    ("Rose Gold", "#B76E79"),
+    ("Hyper Blue", "#1E40AF"),
+    ("Champagne", "#D4AF37"),
+    ("Neon Green", "#84CC16"),
 ]
 
 # Rim designs are built in code (static/cars/js/rims.js) and fitted to each car's own wheels; "Stock"
@@ -207,6 +212,7 @@ class Command(BaseCommand):
         if wheel_mesh:
             for label, hex_value in WHEEL_COLORS:
                 self.option(car, "wheels", label, wheel_mesh, color_hex=hex_value)
+            car.options.filter(option_type="wheels").exclude(label__in=[l for l, _ in WHEEL_COLORS]).delete()
             for label, mesh_name in RIM_STYLES:
                 self.option(car, "rims", label, mesh_name, color_hex="")
             keep_rims = [label for label, _ in RIM_STYLES]
