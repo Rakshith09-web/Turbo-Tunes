@@ -45,51 +45,5 @@
     {% include "includes/messages.html" %}
     {% block content %}{% endblock %}
   </main>
-
-  <!-- Footer Divider (subtle luminous streak) -->
-  {% block footer_divider %}
-    <div class="checkered-flag-divider" aria-hidden="true"></div>
-  {% endblock %}
-
-  <!-- Cinematic Dark Footer -->
-  <footer class="site-footer">
-    <div class="footer-glow" aria-hidden="true"></div>
-    <div class="footer-container">
-      <div class="footer-brand-col">
-        <a href="{% url 'home' %}" class="brand footer-brand">
-          <span class="brand-turbo">TURBO</span><span class="brand-tunes">TUNES</span>
-        </a>
-        <p class="footer-tagline">MODIFY &bull; UPGRADE &bull; DRIVE BETTER</p>
-        <p class="footer-about">
-          Engineered for automotive enthusiasts. Real-time 3D interactive car builder, bespoke aerodynamic parts, and on-demand doorstep technician dispatch.
-        </p>
-      </div>
-
-      <div class="footer-links-col">
-        <h4 class="footer-heading">Fast Track</h4>
-        <ul class="footer-menu">
-          <li><a href="{% url 'car_gallery' %}">3D Showroom</a></li>
-          <li><a href="{% url 'book_service' %}">Doorstep Service</a></li>
-          <li><a href="{% url 'home' %}">Performance Lab</a></li>
-          <li><a href="/admin/">Workshop Admin</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-status-col">
-        <h4 class="footer-heading">System Status</h4>
-        <div class="status-card">
-          <div class="status-indicator">
-            <span class="status-ping"></span>
-            <span class="status-core"></span>
-          </div>
-          <div class="status-info">
-            <span class="status-label">WebGL 3D Engine</span>
-            <span class="status-value">Active &bull; 60 FPS</span>
-          </div>
-        </div>
-        <p class="footer-copyright">&copy; {% now "Y" %} TURBO TUNES. All rights reserved.</p>
-      </div>
-    </div>
-  </footer>
 </body>
 </html>

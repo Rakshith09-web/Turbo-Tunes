@@ -24,10 +24,6 @@
   background: radial-gradient(ellipse at 50% 78%, rgba(32, 31, 28, 0.06) 0%, rgba(32, 31, 28, 0) 60%), var(--bg);
 }
 
-.checkered-flag-divider {
-  display: none !important;
-}
-
 #viewer {
   position: absolute;
   inset: 0;
