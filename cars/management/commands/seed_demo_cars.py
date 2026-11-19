@@ -93,6 +93,12 @@ PAINTS = [
     ("Forest Green", "#2F7D4F"),
     ("Pearl White", "#EFEDE6"),
     ("Graphite", "#3A3B40"),
+    ("Midnight Black", "#0D0E10"),
+    ("Speed Yellow", "#F5B800"),
+    ("Ultra Violet", "#522258"),
+    ("Miami Blue", "#00A3E0"),
+    ("Nardo Grey", "#848789"),
+    ("Lime Green", "#76B900"),
 ]
 
 # Real wheel finishes rather than body-paint colours.
@@ -191,6 +197,7 @@ class Command(BaseCommand):
         # Every paint swatch targets the same mesh, at a different colour.
         for label, hex_value in PAINTS:
             self.option(car, "paint", label, paint_mesh, color_hex=hex_value)
+        car.options.filter(option_type="paint").exclude(label__in=[l for l, _ in PAINTS]).delete()
 
         if wheel_mesh:
             for label, hex_value in WHEEL_COLORS:
